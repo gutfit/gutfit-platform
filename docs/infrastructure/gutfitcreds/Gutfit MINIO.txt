@@ -1,0 +1,36 @@
+Gutfit_MINIO
+
+minio.gutfit.co (via_mtl.autho.cloud)
+user=gutfitadmin
+pass=GutAuth$$!!11
+
+MINIO_ADMIN_URL=https://minio.admin.gutfit.co/
+MINIO_URL=https://minio.gutfit.co/
+
+Gutfit_ArangoDB (via_mtl.autho.cloud)
+https://arangodb.gutfit.co/
+ARANGO_ROOT_PASSWORD=0b8b38f2f3dc0f8f24e4
+
+
+
+
+Gutfit_LangFlow
+URL=langflow.gutfit.co
+user=gutfitadmin
+pass=GutAuth$$!!
+
+Gutfit_Documize
+URL=documize.gutfit.co
+user=gutfitadmin
+pass=GutAuth$$!!
+ENV=DOCUMIZELOCATION=localhost
+DOCUMIZEDBTYPE=postgresql
+DOCUMIZESALT=71c2b20d83c872c7284de1d229aeb6be85f5b963cc4672b10a6e6aacc7839b0d
+DOCUMIZEDB=host=$(PROJECT_NAME)_documize-db port=5432 sslmode=disable user=postgres password=3a149d64404bf630515c dbname=$(PROJECT_NAME)
+
+
+Gutfit_SpaceDrive (via_mtl.autho.cloud)
+URL=spacedrive.gutfit.co
+user=gutfitadmin
+email=admin@gutfit.co
+pass=GutAuth$$!!

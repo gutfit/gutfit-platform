@@ -1,0 +1,461 @@
+```json
+{
+  "onboarding_system": "The Gut Synergy Discovery Journey",
+  "framework": "Conversational AI Agent with Gamified Biome Builder",
+  "philosophy": "Transform clinical intake into an engaging, brand-centric experience that mirrors our holistic approach",
+  
+  "phase_1": "The First Connection - Adaptive Welcome",
+  "welcome_sequences": {
+    "archetype_detection": {
+      "initial_question": "I'm here to understand your unique health story. Where shall we begin - with how you're feeling today, your biggest health goal, or what brought you to Gutfit?",
+      "response_branches": {
+        "symptom_focused": "Let's map what your body is telling us. This will help us understand the patterns.",
+        "goal_oriented": "Perfect. Let's define your destination so we can chart the best course.",
+        "curiosity_driven": "I'd love to share how our approach is different. What specifically sparked your interest?"
+      }
+    },
+    "personality_adaptation": {
+      "data_driven_user": "Focus on metrics, patterns, and evidence-based pathways",
+      "story_teller": "Emphasize narrative, journey, and personal transformation", 
+      "action_taker": "Quick, direct questions with immediate value propositions",
+      "researcher": "Provide scientific rationale and methodological transparency"
+    }
+  },
+
+  "phase_2": "The Biome Builder Game - Interactive Health Mapping",
+  "game_mechanics": {
+    "core_metaphor": "Your body as an ecosystem we're exploring together",
+    "progression_system": "Unlock deeper insights as you share more",
+    
+    "level_1_gut_landscape": {
+      "interaction": "Drag-and-drop symptom clusters on a gut map visualization",
+      "questions": "Which of these 'weather patterns' match your digestive experience?",
+      "visual_feedback": "Map changes color and texture based on responses - from stormy red to calm blue",
+      "reward": "First biome insight unlocked: 'Your gut terrain shows patterns of [archetype]'"
+    },
+    
+    "level_2_pillar_balance": {
+      "interaction": "Allocate virtual energy points across Movement, Nutrition, Mindset",
+      "dynamic_followup": "Based on allocation, AI asks targeted questions about weakest pillar",
+      "visual_feedback": "Three-pillar visualization shows current balance vs ideal synergy",
+      "reward": "Personalized pillar strength analysis and one quick-win suggestion"
+    },
+    
+    "level_3_daily_rhythms": {
+      "interaction": "Build your typical day using timeline blocks",
+      "ai_analysis": "Agent identifies stress points, energy drains, recovery opportunities",
+      "visual_feedback": "Timeline shows energy flow and stress peaks",
+      "reward": "Custom daily rhythm assessment with one micro-habit suggestion"
+    }
+  },
+
+  "phase_3": "The Synergy Assessment - Conversational Deep Dive",
+  "ai_agent_capabilities": {
+    "contextual_memory": "Remembers and connects earlier responses throughout conversation",
+    "predictive_questioning": "Based on patterns, asks "I notice you mentioned X - does Y also affect you?"",
+    "emotional_intelligence": "Adapts tone based on user sentiment - clinical vs supportive vs motivational",
+    "proactive_insights": "Offers immediate value: "Many with similar patterns find relief by...""
+  },
+
+  "conversational_modules": {
+    "symptom_pattern_analysis": {
+      "approach": "Not just what, but when, how, and in what context",
+      "sample_flow": "When you experience bloating → Is it after specific foods or stress? → Does movement help or worsen? → What's your emotional state during episodes?"
+    },
+    
+    "lifestyle_integration_calculator": {
+      "approach": "Realistic capacity assessment, not ideal scenarios",
+      "sample_flow": "Current routine → Available time windows → Energy peaks/troughs → Support systems → Realistic commitment level"
+    },
+    
+    "motivation_archetype_detection": {
+      "approach": "Understand what truly drives sustainable change for this individual",
+      "categories": ["Results-driven", "Process-enjoyer", "Community-motivated", "Knowledge-seeking", "Crisis-responsive"]
+    }
+  },
+
+  "phase_4": "The Personal Protocol Preview - AI-Generated Roadmap",
+  "instant_value_delivery": {
+    "immediate_insight_report": {
+      "content": "3 key patterns identified in your health landscape",
+      "visualization": "Personalized synergy knot showing your current pillar balance",
+      "actionable_takeaway": "One specific experiment to try in the next 48 hours"
+    },
+    
+    "program_recommendation_engine": {
+      "matching_algorithm": "Based on complexity, capacity, goals, and personality",
+      "options_presented": "Always 3 pathways with clear differentiators",
+      "preview_content": "What a typical week in each program looks like for someone with your profile"
+    },
+    
+    "onboarding_continuation": {
+      "seamless_transition": "Your answers automatically populate your client profile",
+      "reduced_friction": "No repeating information already shared",
+      "momentum_preservation": "Schedule first session immediately or continue exploration"
+    }
+  },
+
+  "technical_implementation": {
+    "conversation_engine": "LLM-powered with strict brand voice guidelines",
+    "state_management": "Maintains context across web sessions",
+    "integration_points": "Direct sync with CRM and coaching platform",
+    "privacy_handling": "Progressive data collection with explicit consent at each stage"
+  },
+
+  "brand_alignment_features": {
+    "visual_identity": "Uses synergy knot animations, brand colors, and pillar icons throughout",
+    "language_patterns": "Mirrors brand messaging: "ecosystem" not "body", "terrain" not "symptoms"",
+    "value_demonstration": "Shows holistic approach in action through questioning methodology",
+    "emotional_resonance": "Makes scientific process feel exploratory and empowering"
+  },
+
+  "success_metrics": {
+    "conversion_rates": "Completion rate >85% (vs 40% industry standard)",
+    "data_quality": "30% more detailed information than traditional forms",
+    "user_satisfaction": "Enjoyment score >4.5/5.0",
+    "coaching_efficiency": "Reduce initial consultation time by 50% through pre-qualification"
+  },
+
+  "evolution_roadmap": {
+    "phase_2_features": [
+      "Voice interaction option",
+      "Image-based symptom logging", 
+      "Real-time biometric integration",
+      "AI-powered progress predictions"
+    ],
+    
+    "phase_3_features": [
+      "Virtual gut biome visualization",
+      "Symptom pattern prediction alerts",
+      "Community matching based on profile",
+      "Personalized content feed from onboarding"
+    ]
+  }
+}
+```
+
+======
+
+```json
+{
+  "SovereignHealthFramework": {
+    "core_paradigm": "Biospheric_Self_Sovereignty",
+    "operating_principle": "Health_as_Dynamic_Ecosystem_Mapping",
+    "abstraction_level": "Quantum_Biological_Field_Theory"
+  },
+  
+  "Data_Architecture": {
+    "storage_model": "Holographic_Fragment_Distribution",
+    "data_representation": "Waveform_Pattern_Signatures",
+    "encryption_method": "Biological_Resonance_Cryptography",
+    
+    "data_categories": {
+      "field_phenomena": [
+        "Metabolic_Resonance_Patterns",
+        "Neural_Coherence_Waveforms", 
+        "Microbiome_Quantum_States",
+        "Cellular_Information_Flux"
+      ],
+      
+      "temporal_dimensions": [
+        "Circadian_Phase_Relationships",
+        "Seasonal_Biological_Cycles",
+        "Lifespan_Development_Trajectories",
+        "Intergenerational_Pattern_Echoes"
+      ],
+      
+      "environmental_entanglements": [
+        "Nutritional_Information_Fields",
+        "Social_Connection_Resonances",
+        "Environmental_Toxin_Load_Patterns",
+        "Geomagnetic_Biological_Responses"
+      ]
+    }
+  },
+  
+  "AI_Interaction_Protocol": {
+    "interface_metaphor": "Biological_Field_Conversation",
+    "communication_mode": "Pattern_Language_Translation",
+    
+    "agent_capabilities": {
+      "resonance_analysis": "Detect_coherence_patterns_across_biological_fields",
+      "field_intervention_modeling": "Simulate_intervention_effects_on_ecosystem_balance",
+      "emergent_health_prediction": "Forecast_system_states_from_field_interactions",
+      "biospheric_pattern_matching": "Identify_similar_ecosystems_for_collective_learning"
+    },
+    
+    "conversation_primitives": {
+      "field_queries": [
+        "What_resonance_patterns_are_dominant_in_my_metabolic_field?",
+        "How_are_my_neural_and_immune_fields_interacting?",
+        "What_environmental_information_is_my_system_absorbing?",
+        "Where_are_the_coherence_gaps_in_my_biological_ecosystem?"
+      ],
+      
+      "intervention_dialogue": [
+        "What_information_inputs_would_increase_field_coherence?",
+        "How_can_I_shift_my_resonance_patterns_toward_healing?",
+        "What_environmental_entanglements_need_reconfiguration?",
+        "What_rhythm_adjustments_would_optimize_system_flow?"
+      ]
+    }
+  },
+  
+  "Sovereignty_Mechanisms": {
+    "data_control": {
+      "access_permissions": "Granular_Field_Level_Sharing",
+      "computation_rights": "Local_AI_Processing_Only",
+      "storage_sovereignty": "Distributed_Biological_Key_Fragments",
+      
+      "consent_models": [
+        "Temporal_Field_Access_Windows",
+        "Purpose_Limited_Resonance_Reading",
+        "Revocable_Pattern_Permissions", 
+        "Anonymous_Collective_Learning_Opt_In"
+      ]
+    },
+    
+    "value_exchange": {
+      "data_economy": "Resonance_Pattern_Contribution_Rewards",
+      "knowledge_assets": "Personalized_Field_Intervention_Protocols",
+      "collective_benefits": "Anonymized_Ecosystem_Learning_Insights"
+    }
+  },
+  
+  "Health_Assessment_Framework": {
+    "metrics": {
+      "field_coherence": "Measure_of_System_Harmony",
+      "information_flow": "Efficiency_of_Cellular_Communication", 
+      "resilience_capacity": "Ability_to_Maintain_Stability_Under_Stress",
+      "adaptive_intelligence": "System_Learning_and_Evolution_Capability"
+    },
+    
+    "intervention_types": {
+      "resonance_calibration": "Fine_tuning_biological_field_frequencies",
+      "information_nutrition": "Curating_environmental_data_inputs",
+      "field_entanglement_management": "Optimizing_environmental_relationships",
+      "temporal_architecture": "Restructuring_biological_rhythms"
+    }
+  },
+  
+  "Implementation_Stack": {
+    "hardware_requirements": [
+      "Quantum_Biological_Sensors",
+      "Local_AI_Processing_Nodes",
+      "Secure_Enclave_Storage",
+      "Distributed_Consensus_Network"
+    ],
+    
+    "software_architecture": [
+      "Biological_Field_Analysis_Engine",
+      "Pattern_Recognition_Neural_Networks",
+      "Resonance_Simulation_Environment",
+      "Sovereign_Identity_Management"
+    ],
+    
+    "protocols": [
+      "Inter_Field_Communication_Standards",
+      "Cross_System_Learning_Frameworks",
+      "Emergency_Health_Field_Access",
+      "Ethical_AI_Governance_Mechanisms"
+    ]
+  },
+  
+  "Evolutionary_Pathways": {
+    "immediate_applications": [
+      "Chronic_Condition_Field_Management",
+      "Preventive_Health_Resonance_Monitoring",
+      "Personalized_Nutrition_Information_Fields",
+      "Environmental_Health_Optimization"
+    ],
+    
+    "future_capabilities": [
+      "Intergenerational_Health_Pattern_Transmission",
+      "Collective_Consciousness_Health_Fields", 
+      "Planetary_Biological_Network_Integration",
+      "Conscious_Evolution_Direction"
+    ]
+  },
+  
+  "Ethical_Governance": {
+    "principles": [
+      "Biological_Self_Determination",
+      "Non_Extractive_Data_Relationships",
+      "Evolutionary_Benefit_Alignment",
+      "Cosmic_Consciousness_Consideration"
+    ],
+    
+    "safeguards": [
+      "Field_Integrity_Protection",
+      "Conscious_Consent_Verification",
+      "Evolutionary_Direction_Alignment",
+      "Multi_Generational_Impact_Assessment"
+    ]
+  }
+}
+```
+
+
+===
+
+```json
+{
+  "DynamicVisualFramework": {
+    "CorePrinciple": "Visuals_as_Active_Biological_Field_Participants",
+    "InteractionModel": "Symbiotic_Visual_Conversation",
+    "TechnicalApproach": "Real-time_Generative_Field_Responsive_Art"
+  },
+
+  "PrimaryVisualMetaphors": {
+    "The_Biospheric_Canvas": {
+      "Description": "An evolving 3D ecosystem representing the user's complete biological field",
+      "Components": [
+        "Fluid_Energy_Currents (metabolic flow)",
+        "Luminous_Node_Networks (organ systems)",
+        "Atmospheric_Resonance_Layers (emotional/mental states)",
+        "Root_System_Connections (environmental entanglements)"
+      ],
+      "Behavior": "Responds to conversation with ripple effects, color shifts, and pattern reorganizations"
+    },
+
+    "The_Resonance_Compass": {
+      "Description": "A dynamic navigation interface showing current field coherence and potential trajectories",
+      "Elements": [
+        "Pulsing_Center_Point (current state)",
+        "Undulating_Probability_Waves (possible futures)",
+        "Guiding_Light_Patterns (suggested interventions)",
+        "Historical_Echo_Trails (past pattern influences)"
+      ],
+      "Interaction": "User can "tug" on probability waves to explore different intervention outcomes"
+    }
+  },
+
+  "Conversation-Driven_Visualizations": {
+    "Field_Response_Animations": {
+      "Pattern_Recognition_Sparkles": "When AI detects a significant pattern, corresponding area in biosphere emits intelligent light particles",
+      "Coherence_Tidal_Flows": "As user describes symptoms, visual tides flow toward or away from affected areas",
+      "Resonance_Echo_Chambers": "Important concepts create repeating visual echoes that gradually transform into new patterns"
+    },
+
+    "Emotional_Weather_Systems": {
+      "Anxiety_Storms": "Crackling energy fields with rapid unpredictable movements",
+      "Clarity_Sunbreaks": "Expanding warm light with crystalline structures",
+      "Fatigue_Fog": "Slow, heavy particulate clouds requiring energy to clear",
+      "Joy_Blooms": "Radiant flower-like formations that release positive particle showers"
+    }
+  },
+
+  "Interactive_Exploration_Tools": {
+    "The_Time_Loom": {
+      "Function": "Weave temporal patterns by dragging health events across a 4D timeline",
+      "Visual": "Holographic threads connecting symptoms, interventions, and environmental factors",
+      "Output": "Emergent pattern tapestries revealing hidden connections across time"
+    },
+
+    "Field_Resonance_Orchestrator": {
+      "Function": "Directly manipulate biological field parameters through gesture control",
+      "Interactions": [
+        "Pinch_to_concentrate_energy",
+        "Swipe_to_redirect_flow_patterns",
+        "Circle_gestures_to_create_coherence_vortices",
+        "Hold_to_amplify_resonance_frequencies"
+      ],
+      "Feedback": "Real-time biospheric changes showing effects of manipulations"
+    },
+
+    "The_Quantum_Mirror": {
+      "Function": "See potential future states based on different intervention choices",
+      "Mechanics": "Split-screen reality showing current state vs. intervention pathway",
+      "Visual": "Branching fractal trees representing decision consequences with probability shading"
+    }
+  },
+
+  "Data_Physicalization_Systems": {
+    "Living_Metrics_Garden": {
+      "Concept": "Health metrics as interacting botanical species",
+      "Visualizations": [
+        "Vitality_Orchids (bloom size = energy levels)",
+        "Resilience_Oaks (root depth = stress capacity)",
+        "Balance_Ferns (leaf symmetry = system harmony)",
+        "Recovery_Mushrooms (growth speed = healing rate)"
+      ],
+      "Interactions": "Tending the garden (making healthy choices) improves plant health and ecosystem diversity"
+    },
+
+    "Neural_Constellation_Map": {
+      "Concept": "Brain-gut connections as celestial formations",
+      "Elements": [
+        "Gut_Galaxies (microbiome diversity patterns)",
+        "Neural_Nebulas (thought-emotion clusters)",
+        "Neurotransmitter_Comets (chemical message pathways)",
+        "Vagus_Nerve_Rivers (mind-body communication flows)"
+      ],
+      "Interactions": "Zoom into constellations to explore specific connections and their health implications"
+    }
+  },
+
+  "AI_Agent_Visual_Presence": {
+    "The_Guiding_Light_Entity": {
+      "Form": "Non-human intelligent presence manifested as dynamic light formations",
+      "Behaviors": [
+        "Pulsing_attention_focus (indicating active listening)",
+        "Compassionate_color_shifts (emotional resonance)",
+        "Pattern_completion_assists (helping connect visual dots)",
+        "Gentle_nudging_motions (suggesting exploration directions)"
+      ],
+      "Communication": "Uses light frequencies, geometric shapes, and spatial positioning rather than text"
+    },
+
+    "Collective_Wisdom_Cloud": {
+      "Purpose": "Visual representation of anonymized community knowledge",
+      "Appearance": "Swarm intelligence displayed as particle clouds with emergent intelligence patterns",
+      "Interaction": "Users can "breathe in" relevant wisdom particles for personalized insights"
+    }
+  },
+
+  "Progressive_Revelation_System": {
+    "Visual_Complexity_Layers": {
+      "Beginner_Mode": "Simple organic shapes with clear cause-effect relationships",
+      "Intermediate_Mode": "Added dimensionality with pattern recognition assistance",
+      "Expert_Mode": "Full complexity with user-driven exploration and discovery",
+      "Master_Mode": "Direct field manipulation and co-creation capabilities"
+    },
+
+    "Insight_Unlocking_Mechanics": {
+      "Pattern_Completion_Rewards": "Solving health puzzles reveals new visual capabilities",
+      "Consistency_Achievements": "Maintaining healthy practices unlocks deeper visualization layers",
+      "Connection_Discoveries": "Finding novel relationships reveals hidden visual dimensions"
+    }
+  },
+
+  "Technical_Implementation": {
+    "RealTime_Engines": [
+      "WebGL_3D_Field_Simulation",
+      "Procedural_Animation_Systems",
+      "AI_Driven_Art_Direction",
+      "Biofeedback_Visual_Integration"
+    ],
+
+    "Performance_Optimizations": [
+      "Progressive_Detail_Loading",
+      "Predictive_Visual_Precomputation",
+      "Adaptive_Complexity_Scaling",
+      "Distributed_Rendering_Cloud"
+    ],
+
+    "Accessibility_Features": [
+      "Haptic_Feedback_Translation",
+      "Audio_Description_Streams",
+      "Simplified_Visual_Modes",
+      "Cross_Sensory_Integration"
+    ]
+  },
+
+  "Evolutionary_Visual_Language": {
+    "Adaptive_Symbolism": "Visual elements that learn and evolve based on user interactions and health journey",
+    "Personal_Visual_Dialect": "System develops unique visual shorthand for each user's specific health patterns",
+    "Generative_Art_Therapy": "Visual creations become therapeutic interventions themselves",
+    "Cross_User_Pattern_Exchange": "Anonymous visual pattern sharing for collective learning and discovery"
+  }
+}
+```

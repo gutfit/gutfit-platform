@@ -1,0 +1,135 @@
+```json
+{
+  "onboarding_system": "The Gut Synergy Discovery Journey",
+  "framework": "Conversational AI Agent with Gamified Biome Builder",
+  "philosophy": "Transform clinical intake into an engaging, brand-centric experience that mirrors our holistic approach",
+  
+  "phase_1": "The First Connection - Adaptive Welcome",
+  "welcome_sequences": {
+    "archetype_detection": {
+      "initial_question": "I'm here to understand your unique health story. Where shall we begin - with how you're feeling today, your biggest health goal, or what brought you to Gutfit?",
+      "response_branches": {
+        "symptom_focused": "Let's map what your body is telling us. This will help us understand the patterns.",
+        "goal_oriented": "Perfect. Let's define your destination so we can chart the best course.",
+        "curiosity_driven": "I'd love to share how our approach is different. What specifically sparked your interest?"
+      }
+    },
+    "personality_adaptation": {
+      "data_driven_user": "Focus on metrics, patterns, and evidence-based pathways",
+      "story_teller": "Emphasize narrative, journey, and personal transformation", 
+      "action_taker": "Quick, direct questions with immediate value propositions",
+      "researcher": "Provide scientific rationale and methodological transparency"
+    }
+  },
+
+  "phase_2": "The Biome Builder Game - Interactive Health Mapping",
+  "game_mechanics": {
+    "core_metaphor": "Your body as an ecosystem we're exploring together",
+    "progression_system": "Unlock deeper insights as you share more",
+    
+    "level_1_gut_landscape": {
+      "interaction": "Drag-and-drop symptom clusters on a gut map visualization",
+      "questions": "Which of these 'weather patterns' match your digestive experience?",
+      "visual_feedback": "Map changes color and texture based on responses - from stormy red to calm blue",
+      "reward": "First biome insight unlocked: 'Your gut terrain shows patterns of [archetype]'"
+    },
+    
+    "level_2_pillar_balance": {
+      "interaction": "Allocate virtual energy points across Movement, Nutrition, Mindset",
+      "dynamic_followup": "Based on allocation, AI asks targeted questions about weakest pillar",
+      "visual_feedback": "Three-pillar visualization shows current balance vs ideal synergy",
+      "reward": "Personalized pillar strength analysis and one quick-win suggestion"
+    },
+    
+    "level_3_daily_rhythms": {
+      "interaction": "Build your typical day using timeline blocks",
+      "ai_analysis": "Agent identifies stress points, energy drains, recovery opportunities",
+      "visual_feedback": "Timeline shows energy flow and stress peaks",
+      "reward": "Custom daily rhythm assessment with one micro-habit suggestion"
+    }
+  },
+
+  "phase_3": "The Synergy Assessment - Conversational Deep Dive",
+  "ai_agent_capabilities": {
+    "contextual_memory": "Remembers and connects earlier responses throughout conversation",
+    "predictive_questioning": "Based on patterns, asks "I notice you mentioned X - does Y also affect you?"",
+    "emotional_intelligence": "Adapts tone based on user sentiment - clinical vs supportive vs motivational",
+    "proactive_insights": "Offers immediate value: "Many with similar patterns find relief by...""
+  },
+
+  "conversational_modules": {
+    "symptom_pattern_analysis": {
+      "approach": "Not just what, but when, how, and in what context",
+      "sample_flow": "When you experience bloating → Is it after specific foods or stress? → Does movement help or worsen? → What's your emotional state during episodes?"
+    },
+    
+    "lifestyle_integration_calculator": {
+      "approach": "Realistic capacity assessment, not ideal scenarios",
+      "sample_flow": "Current routine → Available time windows → Energy peaks/troughs → Support systems → Realistic commitment level"
+    },
+    
+    "motivation_archetype_detection": {
+      "approach": "Understand what truly drives sustainable change for this individual",
+      "categories": ["Results-driven", "Process-enjoyer", "Community-motivated", "Knowledge-seeking", "Crisis-responsive"]
+    }
+  },
+
+  "phase_4": "The Personal Protocol Preview - AI-Generated Roadmap",
+  "instant_value_delivery": {
+    "immediate_insight_report": {
+      "content": "3 key patterns identified in your health landscape",
+      "visualization": "Personalized synergy knot showing your current pillar balance",
+      "actionable_takeaway": "One specific experiment to try in the next 48 hours"
+    },
+    
+    "program_recommendation_engine": {
+      "matching_algorithm": "Based on complexity, capacity, goals, and personality",
+      "options_presented": "Always 3 pathways with clear differentiators",
+      "preview_content": "What a typical week in each program looks like for someone with your profile"
+    },
+    
+    "onboarding_continuation": {
+      "seamless_transition": "Your answers automatically populate your client profile",
+      "reduced_friction": "No repeating information already shared",
+      "momentum_preservation": "Schedule first session immediately or continue exploration"
+    }
+  },
+
+  "technical_implementation": {
+    "conversation_engine": "LLM-powered with strict brand voice guidelines",
+    "state_management": "Maintains context across web sessions",
+    "integration_points": "Direct sync with CRM and coaching platform",
+    "privacy_handling": "Progressive data collection with explicit consent at each stage"
+  },
+
+  "brand_alignment_features": {
+    "visual_identity": "Uses synergy knot animations, brand colors, and pillar icons throughout",
+    "language_patterns": "Mirrors brand messaging: "ecosystem" not "body", "terrain" not "symptoms"",
+    "value_demonstration": "Shows holistic approach in action through questioning methodology",
+    "emotional_resonance": "Makes scientific process feel exploratory and empowering"
+  },
+
+  "success_metrics": {
+    "conversion_rates": "Completion rate >85% (vs 40% industry standard)",
+    "data_quality": "30% more detailed information than traditional forms",
+    "user_satisfaction": "Enjoyment score >4.5/5.0",
+    "coaching_efficiency": "Reduce initial consultation time by 50% through pre-qualification"
+  },
+
+  "evolution_roadmap": {
+    "phase_2_features": [
+      "Voice interaction option",
+      "Image-based symptom logging", 
+      "Real-time biometric integration",
+      "AI-powered progress predictions"
+    ],
+    
+    "phase_3_features": [
+      "Virtual gut biome visualization",
+      "Symptom pattern prediction alerts",
+      "Community matching based on profile",
+      "Personalized content feed from onboarding"
+    ]
+  }
+}
+```

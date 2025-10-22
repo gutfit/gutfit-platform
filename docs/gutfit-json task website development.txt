@@ -1,0 +1,90 @@
+```json
+{
+  "task": "website_development",
+  "requirements": {
+    "framework": "foundational_company_architecture",
+    "focus": "functional_structure",
+    "exclude": ["visual_design", "ui_specifics", "styling_details"],
+    "output_format": "modular_components"
+  },
+  "company_context": {
+    "name": "Gutfit",
+    "domain": "gutfit.co",
+    "core_mission": "Empower individuals with gut issues to achieve lasting physical and mental resilience through integrated holistic health",
+    "value_proposition": "Science-backed system integrating movement, nutrition, and mindset for sustainable wellness beyond quick fixes",
+    "core_philosophy": "Synergy of the Connected Self - body, mind, and spirit as interconnected system"
+  },
+  "functional_framework": {
+    "three_pillars": {
+      "movement": {
+        "purpose": "Intentional regulator of physical and mental health",
+        "principles": ["precision_over_duration", "form_focused", "schedule_adaptive", "strength_energy_focused"]
+      },
+      "nutrition": {
+        "purpose": "Cellular information and building blocks for systemic health", 
+        "principles": ["evidence_based", "sustainable_protocols", "gut_brain_immune_optimization", "practical_recipes"]
+      },
+      "mindset": {
+        "purpose": "Cultivate inner peace and mental resilience to reduce stress and alter biology",
+        "principles": ["accessible_breathwork", "mindfulness_practices", "mental_resilience_building", "mind_body_connection"]
+      }
+    },
+    "delivery_mechanisms": [
+      "personalized_coaching",
+      "structured_education", 
+      "habit_based_implementation",
+      "community_support",
+      "technology_enablement"
+    ]
+  },
+  "service_architecture": {
+    "flagship_program": {
+      "name": "The Gutfit Method - 6-Month Transformation",
+      "components": [
+        "duration_based_engagement",
+        "one_on_one_expert_coaching", 
+        "customized_workout_programming",
+        "personalized_nutrition_mindset_protocols",
+        "ongoing_support_mechanisms",
+        "digital_platform_access",
+        "community_membership"
+      ]
+    },
+    "supporting_services": {
+      "coaching_services": [
+        "fitness_nutrition_coaching",
+        "spiritual_mindset_coaching"
+      ],
+      "resource_types": [
+        "courses_programs",
+        "time_bound_challenges", 
+        "lead_generation_freebies",
+        "educational_blog_content"
+      ]
+    }
+  },
+  "content_framework": {
+    "core_messaging_pillars": [
+      "gut_health_foundation",
+      "holistic_integration",
+      "evidence_based_protocols", 
+      "sustainable_habit_formation",
+      "empowerment_self_mastery"
+    ],
+    "user_journey_flow": [
+      "awareness_generation",
+      "landing_education", 
+      "coaching_application",
+      "method_onboarding",
+      "personalized_delivery",
+      "sustained_engagement"
+    ]
+  },
+  "technical_requirements": {
+    "content_structure": "modular_reusable_components",
+    "navigation_flow": "intuitive_pillar_based",
+    "functional_priority": "program_discovery_coaching_conversion",
+    "content_management": "dynamic_pillar_content"
+  }
+}
+```

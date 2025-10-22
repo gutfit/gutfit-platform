@@ -1,0 +1,707 @@
+
+
+Of course. Here is a deep-dive into the architectural and development scriptable implementation for the Gutfit platform, focusing on automated, agent-driven deployment, configuration, and ongoing management. This blueprint prioritizes speed, efficiency, and a fully rebranded GutfitOS (Nextcloud) environment.
+
+### **Gutfit Platform: Automated Deployment & Management Blueprint**
+
+**Philosophy:** Infrastructure as Code (IaC), GitOps principles, and AI-augmented operations. Every component, from base OS configuration to application settings, will be managed through version-controlled scripts and templates, orchestrated by an AI agent.
+
+**Core Technologies for Automation:**
+
+*   **Containerization:** Docker for all services.
+*   **Orchestration:** Docker Compose (initially), with a clear path to Kubernetes for future scaling.
+*   **Provisioning & Configuration Management:** Ansible (for server base config, user management) combined with service-specific API calls.
+*   **AI Agent (GutfitOps Agent):** A specialized instance of AnythingLLM, trained on Gutfit's architecture, operational procedures, and service APIs, to execute and manage deployment/configuration tasks.
+*   **CI/CD Pipeline:** GitLab CI/CD or GitHub Actions to automate testing, building, and deploying container images and configuration changes.
+*   **Monitoring & Logging:** Prometheus, Grafana, Loki (or a simpler, integrated solution like Netdata initially).
+
+---
+
+### **Phase 1: Foundational Infrastructure Automation**
+
+**Objective:** Establish a repeatable, scriptable base server environment and deploy core services in containers.
+
+**1.1. Server Initialization Script (`init_gutfit_server.sh`)**
+
+This script is run once on a fresh server (Ubuntu 22.04 LTS recommended).
+
+```bash
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+# Gutfit Server Initialization Script
+# Usage: sudo ./init_gutfit_server.sh
+
+# --- Configuration Variables ---
+GUTFIT_ADMIN_USER="gutfitadmin"
+GUTFIT_ADMIN_SSH_PUB_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ..." # Replace with actual public key
+DOCKER_COMPOSE_VERSION="2.20.2"
+
+# --- System Updates & Base Packages ---
+echo "Performing system update..."
+apt-get update && apt-get upgrade -y
+apt-get install -y curl wget git htop vim ufw fail2ban
+
+# --- Firewall Configuration ---
+echo "Configuring UFW (Uncomplicated Firewall)..."
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw allow http
+ufw allow https
+# ufw allow 9000 # Optional: for specific internal service monitoring if needed
+ufw --force enable
+
+# --- Create Gutfit Admin User ---
+echo "Creating Gutfit admin user: $GUTFIT_ADMIN_USER"
+adduser --disabled-password --gecos "" $GUTFIT_ADMIN_USER
+usermod -aG sudo $GUTFIT_ADMIN_USER
+mkdir -p /home/$GUTFIT_ADMIN_USER/.ssh
+chmod 700 /home/$GUTFIT_ADMIN_USER/.ssh
+echo "$GUTFIT_ADMIN_SSH_PUB_KEY" > /home/$GUTFIT_ADMIN_USER/.ssh/authorized_keys
+chmod 600 /home/$GUTFIT_ADMIN_USER/.ssh/authorized_keys
+chown -R $GUTFIT_ADMIN_USER:$GUTFIT_ADMIN_USER /home/$GUTFIT_ADMIN_USER/.ssh
+
+# --- Install Docker ---
+echo "Installing Docker..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+rm get-docker.sh
+
+# --- Install Docker Compose ---
+echo "Installing Docker Compose v$DOCKER_COMPOSE_VERSION..."
+sudo curl -L "https://github.com/docker/compose/releases/download/v$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+# --- Add Gutfit Admin to Docker Group ---
+echo "Adding $GUTFIT_ADMIN_USER to docker group..."
+usermod -aG docker $GUTFIT_ADMIN_USER
+
+# --- Create Gutfit Infrastructure Directory ---
+echo "Creating Gutfit infrastructure directory..."
+mkdir -p /opt/gutfit
+chown $GUTFIT_ADMIN_USER:$GUTFIT_ADMIN_USER /opt/gutfit
+
+echo "Gutfit server initialization complete."
+echo "Next steps as $GUTFIT_ADMIN_USER:"
+echo "1. Log out and log back in as $GUTFIT_ADMIN_USER"
+echo "2. Clone the Gutfit Infrastructure repository (e.g., git clone <your-gutfit-infra-repo> /opt/gutfit/infra)"
+echo "3. Navigate to /opt/gutfit/infra and run 'docker-compose up -d'"
+
+exit 0
+```
+
+**1.2. Gutfit Infrastructure Repository (`/opt/gutfit/infra`)**
+
+This Git repository contains all Docker Compose files, environment templates, and Ansible playbooks.
+
+```
+/opt/gutfit/infra/
+├── docker-compose.yml          # Main orchestration file
+├── .env                        # Environment variables for docker-compose
+├── payloadcms/
+│   ├── Dockerfile
+│   └── config/                  # PayloadCMS config
+├── keycloak/
+│   ├── Dockerfile
+│   └── themes/                  # Custom Keycloak theme (Gutfit branding)
+├── nextcloud-gutfitos/          # Rebranded Nextcloud (GutfitOS)
+│   ├── Dockerfile
+│   ├── custom_apps/             # Gutfit-specific Nextcloud apps
+│   └── config/                  # Custom Nextcloud config (autoconfig.php)
+├── moodle/
+│   ├── Dockerfile
+│   └── config/                  # Moodle config.php template
+├── anythingllm/
+│   ├── Dockerfile
+│   └── data/                    # AnythingLLM models and data
+├── openproject/
+│   └── docker-compose.yml       # Official OpenProject docker-compose
+├── caddy/                       # Reverse proxy (optional, can use Nginx/Traefik)
+│   ├── Dockerfile
+│   └── Caddyfile
+├── ansible/
+│   └── playbooks/               # For more complex server mgmt if needed
+└── scripts/                     # Utility scripts (e.g., backup, restore)
+```
+
+**1.3. Main `docker-compose.yml`**
+
+```yaml
+version: '3.8'
+
+services:
+  payloadcms:
+    build: ./payloadcms
+    # image: payloadcms/payloadcms:latest # If not building custom
+    container_name: gutfit_payloadcms
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Admin UI
+    environment:
+      - NODE_ENV=production
+      - PAYLOAD_CONFIG_PATH=/payload/config/payload.config.js # Path inside container
+      - MONGODB_URI=mongodb://gutfit_mongo:27017/gutfit_payload
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET} # From .env file
+    volumes:
+      - ./payloadcms/config:/payload/config # Mount custom config
+      - payloadcms_uploads:/payload/uploads
+    depends_on:
+      - gutfit_mongo
+    networks:
+      - gutfit_backend
+
+  gutfit_mongo:
+    image: mongo:6
+    container_name: gutfit_mongo
+    restart: unless-stopped
+    volumes:
+      - gutfit_mongo_data:/data/db
+    networks:
+      - gutfit_backend
+
+  keycloak:
+    build: ./keycloak
+    # image: quay.io/keycloak/keycloak:latest
+    container_name: gutfit_keycloak
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Keycloak UI
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN} # From .env
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} # From .env
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://gutfit_keycloak_db:5432/keycloak
+      - KC_DB_USER=keycloak
+      - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD} # From .env
+      - KC_HOSTNAME=auth.gutfit.co # Replace with your domain
+      - KC_HTTP_ENABLED=true
+      - KC_PROXY=edge # If using a reverse proxy
+    volumes:
+      - keycloak_themes:/opt/keycloak/themes/gutfit # Mount custom theme
+    depends_on:
+      - gutfit_keycloak_db
+    networks:
+      - gutfit_backend
+
+  gutfit_keycloak_db:
+    image: postgres:15
+    container_name: gutfit_keycloak_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=${KEYCLOAK_DB_PASSWORD} # From .env
+    volumes:
+      - gutfit_keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - gutfit_backend
+
+  nextcloud-gutfitos:
+    build: ./nextcloud-gutfitos
+    # image: nextcloud:latest
+    container_name: gutfit_os
+    restart: unless-stopped
+    ports:
+      - "8081:80" # GutfitOS UI
+    environment:
+      - SQLITE_DATABASE=false # Using PostgreSQL
+      - POSTGRES_HOST=gutfit_os_db
+      - POSTGRES_DB=gutfitos
+      - POSTGRES_USER=gutfitos
+      - POSTGRES_PASSWORD=${GUTFITOS_DB_PASSWORD} # From .env
+      - REDIS_HOST=gutfit_os_redis
+      - OVERWRITEPROTOCOL=https # If using a reverse proxy
+      - OVERWRITEHOST=os.gutfit.co # Replace with your domain
+      - OVERWRITEWEBROOT=/
+      - TRUSTED_PROXIES=172.18.0.0/16 # Adjust for your Docker network
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER} # From .env (for initial setup)
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD} # From .env (for initial setup)
+    volumes:
+      - gutfit_os_data:/var/www/html
+      - ./nextcloud-gutfitos/custom_apps:/var/www/html/custom_apps # For GutfitOS specific apps
+      - ./nextcloud-gutfitos/config:/var/www/html/config # For custom config (autoconfig.php)
+    depends_on:
+      - gutfit_os_db
+      - gutfit_os_redis
+    networks:
+      - gutfit_backend
+
+  gutfit_os_db:
+    image: postgres:15
+    container_name: gutfit_os_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=gutfitos
+      - POSTGRES_USER=gutfitos
+      - POSTGRES_PASSWORD=${GUTFITOS_DB_PASSWORD} # From .env
+    volumes:
+      - gutfit_os_db_data:/var/lib/postgresql/data
+    networks:
+      - gutfit_backend
+
+  gutfit_os_redis:
+    image: redis:alpine
+    container_name: gutfit_os_redis
+    restart: unless-stopped
+    volumes:
+      - gutfit_os_redis_data:/data
+    networks:
+      - gutfit_backend
+
+  moodle:
+    build: ./moodle
+    # image: bitnami/moodle:latest
+    container_name: gutfit_moodle
+    restart: unless-stopped
+    ports:
+      - "8082:8080" # Moodle UI (Bitnami uses 8080)
+    environment:
+      - MOODLE_DATABASE_TYPE=postgresql
+      - MOODLE_DATABASE_HOST=gutfit_moodle_db
+      - MOODLE_DATABASE_PORT_NUMBER=5432
+      - MOODLE_DATABASE_NAME=moodle
+      - MOODLE_DATABASE_USER=moodle
+      - MOODLE_DATABASE_PASSWORD=${MOODLE_DB_PASSWORD} # From .env
+      - MOODLE_USERNAME=${MOODLE_ADMIN_USER} # From .env
+      - MOODLE_PASSWORD=${MOODLE_ADMIN_PASSWORD} # From .env
+      - MOODLE_EMAIL=${MOODLE_ADMIN_EMAIL} # From .env
+      - MOODLE_SITE_NAME="Gutfit Knowledge Academy"
+      # For SMTP (mail sending)
+      - MOODLE_SMTP_HOST=${MOODLE_SMTP_HOST} # From .env
+      - MOODLE_SMTP_PORT=${MOODLE_SMTP_PORT} # From .env
+      - MOODLE_SMTP_USER=${MOODLE_SMTP_USER} # From .env
+      - MOODLE_SMTP_PASSWORD=${MOODLE_SMTP_PASSWORD} # From .env
+      - MOODLE_SMTP_PROTOCOL=tls
+    volumes:
+      - moodle_data:/bitnami/moodle
+      - moodle_moodledata:/bitnami/moodledata
+    depends_on:
+      - gutfit_moodle_db
+    networks:
+      - gutfit_backend
+
+  gutfit_moodle_db:
+    image: postgres:15
+    container_name: gutfit_moodle_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=moodle
+      - POSTGRES_USER=moodle
+      - POSTGRES_PASSWORD=${MOODLE_DB_PASSWORD} # From .env
+    volumes:
+      - gutfit_moodle_db_data:/var/lib/postgresql/data
+    networks:
+      - gutfit_backend
+
+  anythingllm:
+    build: ./anythingllm
+    # image: ghcr.io/mintplex-labs/anythingllm:latest
+    container_name: gutfit_anythingllm
+    restart: unless-stopped
+    ports:
+      - "3001:3001" # AnythingLLM UI
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - UID=1000
+      - GID=1000
+    volumes:
+      - anythingllm_storage:/app/server/storage
+      - ./anythingllm/data:/app/server/models # For LLM files
+    networks:
+      - gutfit_backend
+
+  # Optional: Caddy as a reverse proxy and automatic HTTPS
+  caddy:
+    image: caddy:2-alpine
+    container_name: gutfit_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - gutfit_backend
+      - gutfit_frontend # If client app is also containerized
+
+volumes:
+  payloadcms_uploads:
+  gutfit_mongo_data:
+  keycloak_themes:
+  gutfit_keycloak_db_data:
+  gutfit_os_data:
+  gutfit_os_db_data:
+  gutfit_os_redis_data:
+  moodle_data:
+  moodle_moodledata:
+  gutfit_moodle_db_data:
+  anythingllm_storage:
+  caddy_data:
+  caddy_config:
+
+networks:
+  gutfit_backend:
+    driver: bridge
+  # gutfit_frontend: # If client app is containerized separately
+```
+
+**1.4. Environment File (`.env`)**
+
+```
+# PayloadCMS
+PAYLOAD_SECRET=your_strong_payload_secret_here
+
+# Keycloak
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=your_strong_keycloak_admin_password
+KEYCLOAK_DB_PASSWORD=your_strong_keycloak_db_password
+
+# GutfitOS (Nextcloud)
+NEXTCLOUD_ADMIN_USER=gutfitosadmin
+NEXTCLOUD_ADMIN_PASSWORD=your_strong_gutfitos_admin_password
+GUTFITOS_DB_PASSWORD=your_strong_gutfitos_db_password
+
+# Moodle
+MOODLE_ADMIN_USER=gutfitmoodle
+MOODLE_ADMIN_PASSWORD=your_strong_moodle_admin_password
+MOODLE_ADMIN_EMAIL=admin@gutfit.co
+MOODLE_DB_PASSWORD=your_strong_moodle_db_password
+MOODLE_SMTP_HOST=smtp.yourmailprovider.com
+MOODLE_SMTP_PORT=587
+MOODLE_SMTP_USER=your_smtp_user
+MOODLE_SMTP_PASSWORD=your_smtp_password
+```
+
+---
+
+### **Phase 2: Service Configuration & GutfitOS Branding (Agent-Driven)**
+
+**Objective:** Use the GutfitOps Agent (AnythingLLM instance) to automatically configure core services and apply Gutfit branding to GutfitOS (Nextcloud).
+
+**2.1. GutfitOps Agent (AnythingLLM) Initialization**
+
+The AnythingLLM instance needs to be primed with knowledge of Gutfit's architecture, API documentation for each service, and operational procedures. This involves:
+1.  **Data Ingestion:** Upload API docs (OpenAPI specs if available, or detailed textual descriptions) for PayloadCMS, Keycloak, Nextcloud, Moodle to the AnythingLLM workspace.
+2.  **Prompt Engineering:** Create a set of core prompts that the GutfitOps Agent can understand and execute. These prompts will be high-level, and the agent will translate them into specific API calls or script generations.
+
+**Example GutfitOps Agent Prompts:**
+
+*   `GUTFITOPS_TASK_INITIALIZE_KEYCLOAK`: "Initialize Keycloak realm 'Gutfit'. Create client 'gutfit-client-app' with standard flows (authorization-code, implicit). Create roles 'gutfit_user', 'gutfit_coach', 'gutfit_admin'. Create user 'dijana.spajic@gutfit.co' with role 'gutfit_coach'."
+*   `GUTFITOPS_TASK_CONFIGURE_PAYLOADCMS`: "In PayloadCMS, create collections 'GutfitMethodProgram', 'PrecisionNutritionService', 'AdaptiveMovementService', 'ResilientMindsetService', 'RecipeDatabase', 'ExerciseLibrary', 'MindsetContent'. Define basic fields for each collection as per Gutfit data model."
+*   `GUTFITOPS_TASK_APPLY_GUTFITOS_BRANDING`: "Apply Gutfit branding to the Nextcloud instance at http://gutfit_os:80. This includes setting the primary color to #4A90E2, the logo to /path/to/gutfit_logo.png, and the instance name to 'GutfitOS'."
+*   `GUTFITOPS_TASK_SETUP_MOODLE_SITE`: "Configure Moodle site at http://gutfit_moodle:8080. Set full name to 'Gutfit Knowledge Academy', short name to 'GutfitKA'. Set theme to 'Boost' or a custom Gutfit theme if available. Create category 'Gutfit Programs'."
+
+**2.2. GutfitOS (Nextcloud) Re-branding Dockerfile (`./nextcloud-gutfitos/Dockerfile`)**
+
+This Dockerfile will extend the official Nextcloud image to include custom branding and potentially pre-installed GutfitOS-specific apps.
+
+```dockerfile
+FROM nextcloud:latest
+
+# Set maintainer
+LABEL maintainer="Gutfit DevOps <devops@gutfit.co>"
+
+# Install dependencies for custom scripts if needed
+# RUN apt-get update && apt-get install -y ...
+
+# Copy custom branding assets and configuration
+COPY ./config/custom_theme.css /var/www/html/core/css/custom_theme.css
+COPY ./config/custom_logo.png /var/www/html/core/img/logo.png
+COPY ./config/custom_logoheader.png /var/www/html/core/img/logoheader.png
+COPY ./config/autoconfig.php /var/www/html/config/autoconfig.php
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/config/autoconfig.php \
+    && chown -R www-data:www-data /var/www/html/core/css/custom_theme.css \
+    && chown -R www-data:www-data /var/www/html/core/img/logo.png \
+    && chown -R www-data:www-data /var/www/html/core/img/logoheader.png
+
+# Optional: Pre-install specific Nextcloud apps that are part of GutfitOS
+# RUN occ app:install <app1> <app2>
+
+# Expose port (already in base image)
+# EXPOSE 80
+
+# Entry point (already in base image)
+# ENTRYPOINT ["/entrypoint.sh"]
+# CMD ["apache2-foreground"]
+```
+
+**`./nextcloud-gutfitos/config/autoconfig.php` (Template for automated setup)**
+
+```php
+<?php
+$AUTOCONFIG = [
+  'instanceid' => 'gutfitos-' . uniqid(), // Ensure unique instanceid if not set by docker env
+  'secret' => '${NEXTCLOUD_ADMIN_PASSWORD}', // Or a dedicated secret
+  'trusted_domains' =>
+    array (
+      0 => 'localhost',
+      1 => 'os.gutfit.co', // Your GutfitOS domain
+      // Add other trusted domains as needed
+    ),
+  'datadirectory' => '/var/www/html/data',
+  'dbtype' => 'pgsql',
+  'dbname' => 'gutfitos',
+  'dbhost' => 'gutfit_os_db',
+  'dbport' => '5432',
+  'dbtableprefix' => 'oc_',
+  'dbuser' => 'gutfitos',
+  'dbpassword' => '${GUTFITOS_DB_PASSWORD}',
+  'installed' => false, // Will be set to true by occ maintenance:install
+  'overwrite.cli.url' => 'https://os.gutfit.co', // For occ commands
+  'overwritehost' => 'os.gutfit.co',
+  'overwriteprotocol' => 'https',
+  'mail_from_address' => 'noreply@gutfit.co',
+  'mail_smtpmode' => 'smtp',
+  'mail_sendmailmode' => 'smtp',
+  'mail_domain' => 'gutfit.co',
+  'mail_smtpauthtype' => 'LOGIN',
+  'mail_smtpauth' => 1,
+  'mail_smtphost' => 'smtp.yourmailprovider.com', // From .env or another config
+  'mail_smtpport' => '587',
+  'mail_smtpname' => 'noreply@gutfit.co',
+  'mail_smtppassword' => 'your_smtp_password', // From .env
+  'mail_smtpsecure' => 'tls',
+  'theme' => 'gutfit', // If you create a custom theme named 'gutfit'
+];
+?>
+```
+
+The GutfitOps Agent would need to be able to trigger the Nextcloud `occ` commands for final setup if not fully handled by `autoconfig.php` or environment variables during the first container run.
+Example: `docker exec -u www-data gutfit_os php occ maintenance:install --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}"`
+
+---
+
+### **Phase 3: Dynamic Service & User Management (Agent-Driven)**
+
+**Objective:** Automate the creation of Gutfit services (programs, courses, packages), user onboarding, and GutfitOS instance provisioning for each user.
+
+**3.1. Service Definition Manifests (SDMs)**
+
+Services (like "The Gutfit Method", "Precision Nutrition - 3 Month Plan") will be defined in YAML or JSON files within the Gutfit Infrastructure repository.
+
+**Example SDM: `the_gutfit_method_sdm.yaml`**
+
+```yaml
+service_name: "The Gutfit Method - 6 Month Transformation"
+service_type: "comprehensive_coaching_program"
+service_id: "gutfit_method_6m_v1"
+description: "Our flagship 6-month personalized coaching experience..."
+price_usd: 2497 # or a pricing tier object
+duration_days: 180
+
+# Components of this service
+components:
+  - component_type: "payloadcms_collection"
+    collection_name: "GutfitMethodProgram"
+    content_slug: "the-gutfit-method-6-month" # Content in PayloadCMS
+  - component_type: "moodle_course"
+    course_id: "gutfit_method_moodle_course_v1" # Course ID in Moodle
+  - component_type: "gutfitos_user_template"
+    template_path: "/gutfit_os_templates/gutfit_method_user_template" # Folder structure in GutfitOS
+  - component_type: "keycloak_role_assignment"
+    role_name: "gutfit_method_client" # Role to assign upon enrollment
+  - component_type: "coaching_call_schedule"
+    num_calls: 6
+    call_frequency_weeks: 4
+
+# Triggers for automation
+on_user_enroll:
+  - action: "provision_gutfitos_instance"
+    template: "gutfit_method_user_template"
+  - action: "assign_moodle_course"
+    course_id: "gutfit_method_moodle_course_v1"
+  - action: "assign_keycloak_role"
+    role_name: "gutfit_method_client"
+  - action: "create_coaching_call_schedule"
+    num_calls: 6
+    call_frequency_weeks: 4
+    assign_to_coach_role: "gutfit_coach" # Or a specific coach ID
+```
+
+**3.2. GutfitOps Agent for Service Management**
+
+The GutfitOps Agent will be able to:
+1.  **Parse SDMs:** Understand the structure and components of a Gutfit service.
+2.  **Execute `on_user_enroll` actions:**
+    *   **Provision GutfitOS Instance:** When a new user enrolls in "The Gutfit Method", the agent will:
+        *   Create a new user in Keycloak (if not exists).
+        *   Create a dedicated user directory within the shared Nextcloud (GutfitOS) volume (e.g., `/data/gutfit_os_files/username_gutfit_method/`).
+        *   Populate this directory from the specified `template_path` (e.g., copy initial protocol templates, check-in forms).
+        *   Set appropriate Nextcloud share permissions for the user and their assigned coach.
+        *   *(Advanced)* If true isolation is needed per user for GutfitOS, this could involve spinning up a dedicated, resource-limited Nextcloud container per user or a multi-instance setup with a unique database per user - this is significantly more complex. A shared instance with robust permissioning is more feasible initially. The "sovereign" aspect comes from data control and portability, not necessarily full multi-tenancy at the OS level for each user initially.
+    *   **Assign Moodle Course:** Use Moodle API to enroll the user in the specified course.
+    *   **Assign Keycloak Role:** Use Keycloak API to assign the user the role associated with the service (e.g., `gutfit_method_client`). This role will control access to specific content in PayloadCMS and features in the client app.
+    *   **Create Coaching Call Schedule:** Use an API (perhaps a custom Gutfit API or by interacting with a calendar service like Cal.com or Google Calendar via API) to schedule the coaching calls and assign them to a coach.
+
+**3.3. User Onboarding Script (`manage_gutfit_user.py` - Conceptual Python Script)**
+
+This script would be triggered by a successful payment/enrollment event (e.g., from a webhook from a payment processor or a form submission). It would then interact with the GutfitOps Agent or directly call service APIs.
+
+```python
+import requests
+import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv() # Load API keys, URLs from .env
+
+KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
+KEYCLOAK_ADMIN_TOKEN = os.getenv("KEYCLOAK_ADMIN_TOKEN") # Or get via service account
+NEXTCLOUD_URL = os.getenv("NEXTCLOUD_URL")
+NEXTCLOUD_ADMIN_USER = os.getenv("NEXTCLOUD_ADMIN_USER")
+NEXTCLOUD_ADMIN_PASSWORD = os.getenv("NEXTCLOUD_ADMIN_PASSWORD")
+MOODLE_URL = os.getenv("MOODLE_URL")
+MOODLE_WS_TOKEN = os.getenv("MOODLE_WS_TOKEN") # Moodle Web Service Token
+GUTFITOPS_AGENT_API_URL = os.getenv("GUTFITOPS_AGENT_API_URL") # API for the AnythingLLM agent
+
+# Function to get Keycloak admin token (simplified)
+def get_keycloak_token():
+    # ... logic to get token ...
+    return "token"
+
+# Function to create user in Keycloak
+def create_keycloak_user(user_data):
+    headers = {"Authorization": f"Bearer {get_keycloak_token()}", "Content-Type": "application/json"}
+    response = requests.post(f"{KEYCLOAK_URL}/admin/realms/Gutfit/users", json=user_data, headers=headers)
+    # ... handle response, return user_id ...
+    return response.json()["id"]
+
+# Function to create user space in Nextcloud (GutfitOS)
+def create_nextcloud_user_space(user_id, username, service_template_path):
+    # 1. Create Nextcloud user if not exists (using occ or API if available/complex)
+    #    For simplicity, assume Keycloak SSO handles user creation in NC on first login.
+    # 2. Create user directory and populate from template
+    #    This might involve direct file operations on the shared volume
+    #    or using Nextcloud's API if it supports folder creation/population easily.
+    #    Example: os.makedirs(f"/var/www/html/data/{username}_gutfit_method")
+    #    Then copy files from service_template_path
+    #    Then set share permissions for coach.
+    print(f"Provisioning GutfitOS space for {username} using template {service_template_path}")
+    # This part is highly dependent on the chosen GutfitOS isolation strategy.
+    # For a shared NC instance, it's about folder creation and permissioning.
+    # The GutfitOps Agent would handle these steps based on its capabilities.
+
+# Function to enroll user in Moodle course
+def enroll_in_moodle_course(user_id, course_id):
+    # Use Moodle Web Service functions
+    # e.g., core_enrol_enrol_users
+    print(f"Enrolling user {user_id} in Moodle course {course_id}")
+
+# Main onboarding logic
+def onboard_new_user(enrollment_details):
+    user_email = enrollment_details["email"]
+    service_id = enrollment_details["service_id"] # e.g., "gutfit_method_6m_v1"
+
+    # 1. Create user in Keycloak
+    user_data = {"email": user_email, "username": user_email.split('@')[0], "enabled": True} # Add more fields
+    keycloak_user_id = create_keycloak_user(user_data)
+
+    # 2. Get Service Definition Manifest (SDM) for service_id
+    # sdm = get_sdm(service_id) # This would fetch the YAML/JSON
+
+    # 3. Instruct GutfitOps Agent to perform enrollment actions
+    agent_payload = {
+        "action": "process_user_enrollment",
+        "service_id": service_id,
+        "user_keycloak_id": keycloak_user_id,
+        "user_email": user_email,
+        # "sdm": sdm # Or the agent fetches the SDM itself
+    }
+    # response = requests.post(f"{GUTFITOPS_AGENT_API_URL}/execute", json=agent_payload)
+    # print(f"GutfitOps Agent response: {response.json()}")
+
+    # Simplified: Agent orchestrates or direct calls if agent is not fully capable yet.
+    # For now, let's assume the agent handles the complex parts like GutfitOS setup.
+    # The script would primarily trigger the agent.
+
+    print(f"Triggering GutfitOps Agent for onboarding {user_email} for service {service_id}")
+    # Actual implementation of agent communication is crucial here.
+    # This could be a direct API call to AnythingLLM if it's set up for such execution,
+    # or a message queue (e.g., RabbitMQ, Redis Streams) that a worker process
+    # (which then interacts with the AnythingLLM agent) consumes.
+
+if __name__ == "__main__":
+    # Example: enrollment_details = {"email": "newclient@gutfit.co", "service_id": "gutfit_method_6m_v1"}
+    # onboard_new_user(enrollment_details)
+    pass
+```
+The GutfitOps Agent, powered by AnythingLLM, would be the brain. It would receive these high-level tasks (`process_user_enrollment`), retrieve the relevant SDM, and break it down into a sequence of API calls to Keycloak, Moodle, Nextcloud, and potentially PayloadCMS. The agent's ability to generate and execute these API calls (or scripts that make these calls) is key. This might involve the agent outputting a script (e.g., Python, Bash) that is then executed, or it might directly interact with HTTP libraries if given that capability.
+
+---
+
+### **Phase 4: Client Application (EasyAppy) Integration & Management**
+
+**Objective:** Define how the client application, built with a framework like EasyAppy (React Native, Flutter, or similar), integrates with the backend services and leverages the GutfitOps Agent for dynamic features.
+
+**4.1. Client App Architecture**
+
+*   **Authentication:** Uses Keycloak's OIDC flow for secure login.
+*   **API Gateway:** All backend requests go through a central API gateway (could be Caddy, a dedicated API Gateway service, or direct service-to-service calls if managed carefully).
+*   **Core Modules:**
+    *   **Auth Module:** Handles login, logout, token refresh, user profile retrieval.
+    *   **Service Catalog Module:** Fetches available services and packages from PayloadCMS.
+    *   **GutfitOS Module:** Lists, downloads, uploads, and syncs files from the user's dedicated GutfitOS space. Uses Nextcloud's WebDAV API or a custom Gutfit API that proxies to Nextcloud.
+    *   **Moodle Module:** Displays enrolled courses, lists lessons, allows marking complete. Uses Moodle's Mobile App service or custom API calls.
+    *   **Content Module:** Fetches general content (articles, FAQs) from PayloadCMS.
+    *   **AI Assistant Module:** Provides a chat interface to the GutfitOps Agent (AnythingLLM instance). Sends user queries and receives AI-generated responses.
+    *   **Coaching Module:** Manages scheduling and notes for coaching calls (integrates with calendar/teleconferencing).
+
+**4.2. Agent-Driven Dynamic UI/Features**
+
+The GutfitOps Agent can influence the client app:
+*   **Personalized Content:** The agent can provide a list of "recommended articles" or "next steps" for a user based on their enrolled service and progress, which the client app then displays.
+*   **Form Generation:** For weekly check-ins, the agent could generate a dynamic form (JSON schema) that the client app renders.
+*   **Notifications:** The agent can trigger push notifications via a service (e.g., Firebase Cloud Messaging, APNs) by sending a request to a Gutfit notification API, which the agent can learn to call.
+
+---
+
+### **Phase 5: Ongoing Management & CI/CD**
+
+**Objective:** Establish processes for updating, monitoring, and scaling the platform.
+
+**5.1. CI/CD Pipeline (e.g., GitLab CI/CD)**
+
+*   **Trigger:** On push to `main` branch of the Gutfit Infrastructure repository.
+*   **Stages:**
+    1.  **Build:** Build new Docker images for services where Dockerfiles have changed.
+    2.  **Test:** Run automated tests (e.g., unit tests for custom scripts, integration tests for API calls).
+    3.  **Deploy (Staging):** Deploy updated containers to a staging environment for manual review.
+    4.  **Deploy (Production):** Upon approval, deploy updated containers to production (e.g., by tagging the Docker image and running `docker-compose up -d --force-recreate` on the production server, or using a more sophisticated orchestration tool).
+
+**5.2. GutfitOps Agent for Routine Tasks**
+
+*   **Health Checks:** Agent can periodically ping services and report anomalies.
+*   **Log Analysis:** Agent can be fed aggregated logs (from Loki, or direct service logs) to identify errors or patterns.
+*   **Backup Coordination:** Agent can trigger backup scripts (e.g., for databases, GutfitOS user data).
+*   **User Support Triage:** Agent can analyze user-submitted support requests (from the client app or web) and suggest initial troubleshooting steps or categorize them for human agents.
+*   **Service Updates:** If a service definition (SDM) changes, the agent can help orchestrate updates for existing users (e.g., adding a new resource to their GutfitOS space).
+
+**5.3. OpenProject Integration**
+
+*   Use OpenProject internally for:
+    *   Planning new features and services.
+    *   Tracking bugs and technical debt.
+    *   Managing deployment schedules.
+    *   Documentation of operational procedures (which the GutfitOps Agent can also learn from).
+
+---
+
+### **Conclusion: The Autonomous Gutfit Ecosystem**
+
+This blueprint outlines a path to a highly automated, agent-driven Gutfit platform. By embracing Infrastructure as Code, containerization, and an AI-augmented operations layer (GutfitOps Agent), Gutfit can achieve:
+
+*   **Speed & Efficiency:** Rapid deployment of new services and user environments.
+*   **Consistency & Reliability:** Reduced human error through automated, repeatable processes.
+*   **Scalability:** Easier management of a growing user base and service catalog.
+*   **Resilience:** Automated health checks and recovery procedures.
+*   **Innovation:** The GutfitOps Agent becomes a powerful tool for continuously optimizing and extending the platform's capabilities.
+
+The initial effort in setting up the automation framework and training the GutfitOps Agent will pay significant dividends in the long run, allowing the Gutfit team to focus more on core service innovation (content, coaching methodologies) and less on repetitive operational tasks. This creates a truly dynamic and intelligent wellness ecosystem.
