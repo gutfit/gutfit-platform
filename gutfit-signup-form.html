@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join Gutfit Platform</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+
+      .signup-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        max-width: 480px;
+        width: 90%;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .signup-container:before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, #667eea20, #764ba220, #f093fb20);
+        border-radius: 50%;
+        z-index: -1;
+        animation: rotate 20s linear infinite;
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .logo h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 8px;
+      }
+
+      .logo p {
+        color: #4a5568;
+        font-size: 16px;
+      }
+
+      .progress-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 32px;
+      }
+
+      .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+      }
+
+      .progress-step:before {
+        content: "";
+        position: absolute;
+        top: 12px;
+        left: 30px;
+        right: -30px;
+        height: 2px;
+        background: #e2e8f0;
+        z-index: 1;
+      }
+
+      .progress-step:last-child:before {
+        display: none;
+      }
+
+      .step-circle {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #718096;
+        font-size: 12px;
+        font-weight: 600;
+        position: relative;
+        z-index: 2;
+      }
+
+      .progress-step.active .step-circle {
+        background: #667eea;
+        color: white;
+      }
+
+      .progress-step.completed .step-circle {
+        background: #48bb78;
+        color: white;
+      }
+
+      .step-label {
+        font-size: 12px;
+        color: #718096;
+        margin-top: 8px;
+        text-align: center;
+      }
+
+      .progress-step.active .step-label {
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .form-section {
+        margin-bottom: 24px;
+      }
+
+      .form-section h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+        position: relative;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #4a5568;
+        margin-bottom: 4px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: white;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .form-row .form-group {
+        flex: 1;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #f7fafc;
+        color: #4a5568;
+        border: 2px solid #e2e8f0;
+      }
+
+      .btn-secondary:hover {
+        background: #edf2f7;
+        color: #2d3748;
+      }
+
+      .ai-chat {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+        border-left: 4px solid #667eea;
+      }
+
+      .ai-response {
+        font-style: italic;
+        color: #4a5568;
+        line-height: 1.5;
+      }
+
+      .typing {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #667eea;
+        animation: typing 1.4s infinite;
+      }
+
+      @keyframes typing {
+        0%,
+        60%,
+        100% {
+          transform: translateY(-4px);
+          opacity: 0.4;
+        }
+        30% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .error {
+        background: #fed7d7;
+        color: #c53030;
+        border: 1px solid #feb2b2;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+
+      .success {
+        background: #c6f6d5;
+        color: #276749;
+        border: 1px solid #9ae6b4;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="signup-container">
+      <div class="logo">
+        <h1>🌟 Gutfit Platform</h1>
+        <p>Transform Your Clinical Practice</p>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-step active" id="step1">
+          <div class="step-circle">1</div>
+          <div class="step-label">About You</div>
+        </div>
+        <div class="progress-step" id="step2">
+          <div class="step-circle">2</div>
+          <div class="step-label">Practice</div>
+        </div>
+        <div class="progress-step" id="step3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Complete</div>
+        </div>
+      </div>
+
+      <form id="signupForm">
+        <!-- Step 1: Personal Information -->
+        <div class="form-section" id="section1">
+          <h3>Tell us about yourself</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name *</label>
+              <input type="text" id="firstName" name="firstName" required />
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last Name *</label>
+              <input type="text" id="lastName" name="lastName" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Professional Email *</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="role">Your Role</label>
+            <select id="role" name="role">
+              <option value="clinician">Clinical Psychologist</option>
+              <option value="coach">Life Coach</option>
+              <option value="therapist">Therapist</option>
+              <option value="founder">Founder/Entrepreneur</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="ai-chat">
+            <div class="ai-response">
+              <span id="aiResponse1"
+                >I help healthcare professionals join the Gutfit platform and
+                create evidence-based clinical workflows. Welcome! What brings
+                you to our platform?</span
+              >
+              <span class="typing" id="typing1"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Practice Information -->
+        <div class="form-section hidden" id="section2">
+          <h3>Tell us about your practice</h3>
+
+          <div class="form-group">
+            <label for="specialization">Primary Specialization</label>
+            <select id="specialization" name="specialization">
+              <option value="cbt">Cognitive Behavioral Therapy (CBT)</option>
+              <option value="dbt">Dialectical Behavior Therapy (DBT)</option>
+              <option value="humanistic">Humanistic/Existential</option>
+              <option value="psychodynamic">Psychodynamic</option>
+              <option value="emdr">EMDR</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="experience">Years of Experience</label>
+            <select id="experience" name="experience">
+              <option value="0-2">0-2 years</option>
+              <option value="3-5">3-5 years</option>
+              <option value="6-10">6-10 years</option>
+              <option value="10+">10+ years</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="focus">Primary Client Focus</label>
+            <select id="focus" name="focus">
+              <option value="depression">Depression & Mood Disorders</option>
+              <option value="anxiety">Anxiety & Stress</option>
+              <option value="trauma">Trauma & PTSD</option>
+              <option value="relationships">Relationships & Couples</option>
+            </select>
+          </div>
+
+          <div class="ai-chat">
+            <div class="ai-response" id="aiResponse2">
+              Based on your clinical focus, I can help you set up personalized
+              evidence-based protocols. Gutfit's AI assistant will guide your
+              clients through CBT exercises and help track their progress.
+            </div>
+            <span class="typing" id="typing2"></span>
+          </div>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div class="form-section hidden" id="section3">
+          <h3>🎉 You're all set!</h3>
+          <p style="text-align: center; margin: 20px 0">
+            Your Gutfit account has been created successfully.
+          </p>
+
+          <div class="ai-chat">
+            <div class="ai-response">
+              Congratulations! Your clinical workspace is ready. You'll receive
+              login credentials via email shortly. I recommend starting with our
+              CBT protocol template - it's evidence-based and includes AI-guided
+              client exercises. Welcome to the future of clinical practice!
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="location.reload()"
+          >
+            Create Another Account
+          </button>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="errorMessage" class="error hidden"></div>
+        <div id="successMessage" class="success hidden"></div>
+
+        <!-- Navigation Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 24px">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="prevBtn"
+            style="display: none; flex: 1"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="nextBtn"
+            style="flex: 2"
+          >
+            Next Step
+          </button>
+          <button type="submit" class="btn btn-primary hidden" id="submitBtn">
+            Create Account
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      let currentStep = 1;
+      const totalSteps = 3;
+
+      function updateProgress() {
+        // Update progress steps
+        for (let i = 1; i <= totalSteps; i++) {
+          const step = document.getElementById(`step${i}`);
+          if (i < currentStep) {
+            step.classList.remove("active");
+            step.classList.add("completed");
+          } else if (i === currentStep) {
+            step.classList.add("active");
+            step.classList.remove("completed");
+          } else {
+            step.classList.remove("active", "completed");
+          }
+        }
+
+        // Show/hide sections
+        for (let i = 1; i <= totalSteps; i++) {
+          const section = document.getElementById(`section${i}`);
+          if (i === currentStep) {
+            section.classList.remove("hidden");
+            section.classList.add("fade-in");
+          } else {
+            section.classList.add("hidden");
+            section.classList.remove("fade-in");
+          }
+        }
+
+        // Update navigation buttons
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const submitBtn = document.getElementById("submitBtn");
+
+        prevBtn.style.display = currentStep > 1 ? "inline-flex" : "none";
+        nextBtn.style.display =
+          currentStep < totalSteps - 1 ? "inline-flex" : "none";
+        submitBtn.style.display =
+          currentStep === totalSteps - 1 ? "inline-flex" : "none";
+      }
+
+      function showAIResponse(step, message) {
+        const responseElement = document.getElementById(`aiResponse${step}`);
+        const typingElement = document.getElementById(`typing${step}`);
+
+        // Show typing indicator
+        typingElement.style.display = "inline-block";
+
+        setTimeout(() => {
+          typingElement.style.display = "none";
+          responseElement.textContent = message;
+          responseElement.style.opacity = "1";
+        }, 1500);
+      }
+
+      // Event listeners
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        if (currentStep < totalSteps) {
+          currentStep++;
+          updateProgress();
+        }
+      });
+
+      document.getElementById("prevBtn").addEventListener("click", () => {
+        if (currentStep > 1) {
+          currentStep--;
+          updateProgress();
+        }
+      });
+
+      document
+        .getElementById("signupForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData);
+
+          try {
+            // Simulate API call to Authentik + GutfitOS
+            console.log("Creating account:", data);
+
+            // Show loading on submit button
+            const submitBtn = document.getElementById("submitBtn");
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = "Creating Account...";
+            submitBtn.disabled = true;
+
+            // Simulate API call
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // Success
+            currentStep = totalSteps;
+            updateProgress();
+
+            document.getElementById("successMessage").textContent =
+              "Account created successfully! Check your email for next steps.";
+            document
+              .getElementById("successMessage")
+              .classList.remove("hidden");
+            document.getElementById("errorMessage").classList.add("hidden");
+
+            showAIResponse(
+              3,
+              "Congratulations! Your clinical workspace is ready. You'll receive login credentials via email shortly. I recommend starting with our CBT protocol template - it's evidence-based and includes AI-guided client exercises. Welcome to the future of clinical practice!"
+            );
+
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          } catch (error) {
+            document.getElementById("errorMessage").textContent =
+              "There was an error creating your account. Please try again.";
+            document.getElementById("errorMessage").classList.remove("hidden");
+            document.getElementById("successMessage").classList.add("hidden");
+
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        });
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        updateProgress();
+        showAIResponse(
+          1,
+          "Welcome to Gutfit! I'm here to help you join our clinical platform and get started with evidence-based digital workflows. What brings you to our platform today?"
+        );
+
+        // Auto-advance to step 2 after step 1 interaction
+        setTimeout(() => {
+          if (currentStep === 1) {
+            showAIResponse(
+              1,
+              "Great! I'm excited to help you join our clinical platform. Let's continue setting up your account with your practice information."
+            );
+          }
+        }, 3000);
+      });
+
+      // AI typing effect
+      setInterval(() => {
+        const dots = document.querySelectorAll(".typing");
+        dots.forEach((dot) => {
+          if (dot.style.display !== "none") {
+            dot.style.opacity = Math.random() * 0.5 + 0.5;
+          }
+        });
+      }, 200);
+    </script>
+  </body>
+</html>
