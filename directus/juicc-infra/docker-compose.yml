@@ -1,0 +1,469 @@
+version: "3.8"
+
+services:
+  # Directus Core (Enhanced for Juicc Brand OS)
+  juicc-directus:
+    image: directus/directus:11.1.0
+    container_name: juicc-directus
+    restart: unless-stopped
+    ports:
+      - "8055:8055"
+    environment:
+      DB_CLIENT: "pg"
+      DB_HOST: "juicc-postgres"
+      DB_PORT: "5432"
+      DB_DATABASE: "juicc"
+      DB_USER: "directus"
+      DB_PASSWORD: "${DB_PASSWORD:-juicc123}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@juicc.com}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-juicc123}"
+      SECRET: "${SECRET:-juicc-super-secret-key-change-in-production}"
+      REDIS_HOST: "juicc-redis"
+      WEBSOCKETS_ENABLED: "true"
+      EXTENSIONS_PATH: "/directus/extensions"
+      PUBLIC_URL: "${PUBLIC_URL:-http://localhost:8055}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:3000}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      NODE_ENV: "${NODE_ENV:-development}"
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./juicc-brand-core/extensions:/directus/extensions
+      - ./juicc-brand-core/config:/directus/config
+    depends_on:
+      - juicc-postgres
+      - juicc-redis
+    networks:
+      - juicc-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8055/server/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  juicc-postgres:
+    image: postgres:15-alpine
+    container_name: juicc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "juicc"
+      POSTGRES_USER: "directus"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-juicc123}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./juicc-infra/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./juicc-infra/database:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - juicc-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U directus -d juicc"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Caching and Events
+  juicc-redis:
+    image: redis:7-alpine
+    container_name: juicc-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass '${REDIS_PASSWORD:-juicc123}'
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - juicc-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # AI Orchestrator Service
+  juicc-ai-orchestrator:
+    build:
+      context: ./juicc-ai-orchestrator
+      dockerfile: Dockerfile
+    container_name: juicc-ai-orchestrator
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-juicc123}@juicc-redis:6379"
+      DIRECTUS_URL: "http://juicc-directus:8055"
+      AI_MODEL_PROVIDER: "${AI_MODEL_PROVIDER:-openai}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4}"
+      GPU_ENABLED: "${GPU_ENABLED:-false}"
+      AI_MODELS_PATH: "/app/models"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      TEMPERATURE: "${AI_TEMPERATURE:-0.7}"
+      MAX_TOKENS: "${AI_MAX_TOKENS:-2000}"
+    volumes:
+      - ./shared:/app/shared
+      - ./models:/app/models
+      - ./juicc-ai-orchestrator/config:/app/config
+    depends_on:
+      - juicc-redis
+      - juicc-directus
+    networks:
+      - juicc-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Creative Engine Service
+  juicc-creative-engine:
+    build:
+      context: ./juicc-creative-engine
+      dockerfile: Dockerfile
+    container_name: juicc-creative-engine
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      DIRECTUS_URL: "http://juicc-directus:8055"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-juicc123}@juicc-redis:6379"
+      TEMPLATE_PATH: "/app/templates"
+      OUTPUT_PATH: "/app/output"
+      PDF_GENERATOR_URL: "http://juicc-pdf-generator:3003"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+    volumes:
+      - ./templates:/app/templates
+      - ./output:/app/output
+      - ./juicc-creative-engine/config:/app/config
+    depends_on:
+      - juicc-directus
+      - juicc-pdf-generator
+    networks:
+      - juicc-network
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3002/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PDF Generator Service
+  juicc-pdf-generator:
+    build:
+      context: ./juicc-pdf-generator
+      dockerfile: Dockerfile
+    container_name: juicc-pdf-generator
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium-browser"
+      PUPPETEER_HEADLESS: "true"
+      PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage"
+    volumes:
+      - ./output:/app/output
+    networks:
+      - juicc-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3003/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Media Publisher Service
+  juicc-media-publisher:
+    build:
+      context: ./juicc-media-publisher
+      dockerfile: Dockerfile
+    container_name: juicc-media-publisher
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      DIRECTUS_URL: "http://juicc-directus:8055"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-juicc123}@juicc-redis:6379"
+      SOCIAL_APIS_CONFIG: "/app/config/social-apis.json"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      # Social Media API Keys
+      TWITTER_API_KEY: "${TWITTER_API_KEY}"
+      TWITTER_API_SECRET: "${TWITTER_API_SECRET}"
+      TWITTER_ACCESS_TOKEN: "${TWITTER_ACCESS_TOKEN}"
+      TWITTER_ACCESS_TOKEN_SECRET: "${TWITTER_ACCESS_TOKEN_SECRET}"
+      FACEBOOK_APP_ID: "${FACEBOOK_APP_ID}"
+      FACEBOOK_APP_SECRET: "${FACEBOOK_APP_SECRET}"
+      INSTAGRAM_ACCESS_TOKEN: "${INSTAGRAM_ACCESS_TOKEN}"
+      LINKEDIN_CLIENT_ID: "${LINKEDIN_CLIENT_ID}"
+      LINKEDIN_CLIENT_SECRET: "${LINKEDIN_CLIENT_SECRET}"
+    volumes:
+      - ./config:/app/config
+      - ./juicc-media-publisher/config:/app/config
+    depends_on:
+      - juicc-directus
+      - juicc-redis
+    networks:
+      - juicc-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3004/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Qdrant Vector Database for Brand Memory
+  juicc-qdrant:
+    image: qdrant/qdrant:latest
+    container_name: juicc-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__LOG_LEVEL: INFO
+    networks:
+      - juicc-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:6333/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Neo4j for Knowledge Graph
+  juicc-neo4j:
+    image: neo4j:5.15-community
+    container_name: juicc-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:-juicc123}"
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: '["apoc.*"]'
+      NEO4J_dbms_memory_heap_initial__size: "512m"
+      NEO4J_dbms_memory_heap_max__size: "2G"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - juicc-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "cypher-shell",
+          "-u",
+          "neo4j",
+          "-p",
+          "${NEO4J_PASSWORD:-juicc123}",
+          "RETURN 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  juicc-nginx:
+    image: nginx:alpine
+    container_name: juicc-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./juicc-infra/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./juicc-infra/nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - juicc-directus
+      - juicc-ai-orchestrator
+      - juicc-creative-engine
+    networks:
+      - juicc-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for Monitoring
+  juicc-prometheus:
+    image: prom/prometheus:latest
+    container_name: juicc-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./juicc-infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+    networks:
+      - juicc-network
+
+  # Grafana for Dashboards
+  juicc-grafana:
+    image: grafana/grafana:latest
+    container_name: juicc-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD:-juicc123}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./juicc-infra/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./juicc-infra/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - juicc-prometheus
+    networks:
+      - juicc-network
+
+  # Redis Exporter for Monitoring
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: "redis://juicc-redis:6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-juicc123}"
+    ports:
+      - "9121:9121"
+    depends_on:
+      - juicc-redis
+    networks:
+      - juicc-network
+
+  # PostgreSQL Exporter for Monitoring
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://directus:${DB_PASSWORD:-juicc123}@juicc-postgres:5432/juicc?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - juicc-postgres
+    networks:
+      - juicc-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+  neo4j_plugins:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  juicc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

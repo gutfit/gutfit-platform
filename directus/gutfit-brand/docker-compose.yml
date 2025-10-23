@@ -1,0 +1,315 @@
+version: "3.8"
+
+services:
+  # Directus Core for Gutfit Brand
+  gutfit-directus:
+    image: directus/directus:11.1.0
+    container_name: gutfit-directus
+    restart: unless-stopped
+    ports:
+      - "8056:8055"
+    environment:
+      DB_CLIENT: "pg"
+      DB_HOST: "gutfit-postgres"
+      DB_PORT: "5432"
+      DB_DATABASE: "gutfit"
+      DB_USER: "directus"
+      DB_PASSWORD: "${DB_PASSWORD:-gutfit123}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@gutfit.com}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-gutfit123}"
+      SECRET: "${SECRET:-gutfit-super-secret-key-change-in-production}"
+      REDIS_HOST: "gutfit-redis"
+      WEBSOCKETS_ENABLED: "true"
+      EXTENSIONS_PATH: "/directus/extensions"
+      PUBLIC_URL: "${PUBLIC_URL:-http://localhost:8056}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:3000}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      NODE_ENV: "${NODE_ENV:-development}"
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+      - ./config:/directus/config
+    depends_on:
+      - gutfit-postgres
+      - gutfit-redis
+    networks:
+      - gutfit-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8055/server/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database for Gutfit
+  gutfit-postgres:
+    image: postgres:15-alpine
+    container_name: gutfit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "gutfit"
+      POSTGRES_USER: "directus"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-gutfit123}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - gutfit_postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/gutfit-schema.sql:/docker-entrypoint-initdb.d/gutfit-schema.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - gutfit-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U directus -d gutfit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Gutfit Caching and Events
+  gutfit-redis:
+    image: redis:7-alpine
+    container_name: gutfit-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass '${REDIS_PASSWORD:-gutfit123}'
+    volumes:
+      - gutfit_redis_data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - gutfit-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # AI Orchestrator for Gutfit
+  gutfit-ai-orchestrator:
+    build:
+      context: ./juicc-ai-orchestrator
+      dockerfile: Dockerfile
+    container_name: gutfit-ai-orchestrator
+    restart: unless-stopped
+    ports:
+      - "3011:3001"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-gutfit123}@gutfit-redis:6379"
+      DIRECTUS_URL: "http://gutfit-directus:8055"
+      AI_MODEL_PROVIDER: "${AI_MODEL_PROVIDER:-openai}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4}"
+      GPU_ENABLED: "${GPU_ENABLED:-false}"
+      AI_MODELS_PATH: "/app/models"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      TEMPERATURE: "${AI_TEMPERATURE:-0.7}"
+      MAX_TOKENS: "${AI_MAX_TOKENS:-2000}"
+      BRAND_CONTEXT: "gutfit"
+    volumes:
+      - ./shared:/app/shared
+      - ./models:/app/models
+      - ./config:/app/config
+    depends_on:
+      - gutfit-redis
+      - gutfit-directus
+    networks:
+      - gutfit-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Creative Engine for Gutfit
+  gutfit-creative-engine:
+    build:
+      context: ./juicc-creative-engine
+      dockerfile: Dockerfile
+    container_name: gutfit-creative-engine
+    restart: unless-stopped
+    ports:
+      - "3012:3002"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      DIRECTUS_URL: "http://gutfit-directus:8055"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-gutfit123}@gutfit-redis:6379"
+      TEMPLATE_PATH: "/app/templates"
+      OUTPUT_PATH: "/app/output"
+      PDF_GENERATOR_URL: "http://gutfit-pdf-generator:3003"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      BRAND_CONTEXT: "gutfit"
+    volumes:
+      - ./templates:/app/templates
+      - ./output:/app/output
+      - ./config:/app/config
+    depends_on:
+      - gutfit-directus
+      - gutfit-pdf-generator
+    networks:
+      - gutfit-network
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3002/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PDF Generator for Gutfit
+  gutfit-pdf-generator:
+    build:
+      context: ./juicc-pdf-generator
+      dockerfile: Dockerfile
+    container_name: gutfit-pdf-generator
+    restart: unless-stopped
+    ports:
+      - "3013:3003"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium-browser"
+      PUPPETEER_HEADLESS: "true"
+      PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage"
+      BRAND_CONTEXT: "gutfit"
+    volumes:
+      - ./output:/app/output
+    networks:
+      - gutfit-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3003/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy for Gutfit
+  gutfit-nginx:
+    image: nginx:alpine
+    container_name: gutfit-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - gutfit-directus
+      - gutfit-ai-orchestrator
+      - gutfit-creative-engine
+    networks:
+      - gutfit-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for Gutfit Monitoring
+  gutfit-prometheus:
+    image: prom/prometheus:latest
+    container_name: gutfit-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - gutfit_prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+    networks:
+      - gutfit-network
+
+  # Grafana for Gutfit Dashboards
+  gutfit-grafana:
+    image: grafana/grafana:latest
+    container_name: gutfit-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD:-gutfit123}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - gutfit_grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - gutfit-prometheus
+    networks:
+      - gutfit-network
+
+volumes:
+  gutfit_postgres_data:
+    driver: local
+  gutfit_redis_data:
+    driver: local
+  gutfit_prometheus_data:
+    driver: local
+  gutfit_grafana_data:
+    driver: local
+
+networks:
+  gutfit-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

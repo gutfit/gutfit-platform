@@ -1,0 +1,29 @@
+# GUTFIT QUICK COMMANDS
+# =====================
+
+# Connect to remote server
+ssh root@38.102.126.217
+# Password: m5#nzEzA+o2v
+
+# Access VSCode in browser
+# URL: http://38.102.126.217:8080
+# Password: gutfit2025!
+
+# Navigate to project
+cd /config/workspace/gutfit-platform
+
+# GitHub CLI commands
+gh auth login                                    # Authenticate with GitHub
+gh repo create gutfit/gutfit-platform --public  # Create repository
+git push -u origin main                         # Push to GitHub
+
+# Manual sync
+/config/workspace/sync-gutfit.sh
+
+# Check sync log
+tail -f /config/workspace/sync.log
+
+# EasyPanel Admin
+# URL: https://mtl.autho.cloud:20443
+# User: apadmin@hostether.com
+# Password: EthrAuth$$!!11
