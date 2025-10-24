@@ -1,0 +1,181 @@
+# GutfitOS Clinical Platform - Nginx Configuration
+# 100% autonomous domain routing with SSL termination
+
+upstream signup_api {
+    server localhost:{{ api_port }};
+}
+
+# Clinical Signup Domain
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{ signup_subdomain }};
+
+    # Redirect all HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name {{ signup_subdomain }};
+
+    # SSL Configuration
+    ssl_certificate {{ ssl_dir }}/fullchain.pem;
+    ssl_certificate_key {{ ssl_dir }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Security headers
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+
+    # Root directory
+    root {{ web_root }};
+    index index.html;
+
+    # API proxy for backend
+    location /api/ {
+        proxy_pass http://signup_api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # CORS headers for clinical signup API
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+        add_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization";
+    }
+
+    # Preflight requests handling
+    location /api/ {
+        if ($request_method = 'OPTIONS') {
+            return 204;
+        }
+    }
+
+    # Serve static clinical content
+    location / {
+        try_files $uri $uri/ =404;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "GutfitOS Clinical Platform - Healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+
+# Clinical Identity/Security Domain (Authentik)
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name {{ auth_subdomain }};
+
+    # SSL Configuration
+    ssl_certificate {{ ssl_dir }}/fullchain.pem;
+    ssl_certificate_key {{ ssl_dir }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Security headers for clinical data
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+
+    # Proxy to Authentik
+    location / {
+        proxy_pass https://localhost:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # Clinical authentication timeout
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+    }
+}
+
+# Clinical Workspaces Domain (Nextcloud)
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name {{ cloud_subdomain }};
+
+    # SSL Configuration
+    ssl_certificate {{ ssl_dir }}/fullchain.pem;
+    ssl_certificate_key {{ ssl_dir }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Enhanced security for clinical workspaces
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+
+    # Proxy to Nextcloud
+    location / {
+        proxy_pass https://localhost:80;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # Large file upload support for clinical documentation
+        client_max_body_size 10G;
+
+        # Timeout settings for clinical sessions
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+}
+
+# Default server for unmatched subdomains
+server {
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+    server_name _;
+
+    # SSL Configuration
+    ssl_certificate {{ ssl_dir }}/fullchain.pem;
+    ssl_certificate_key {{ ssl_dir }}/privkey.pem;
+
+    return 444;  # Close connection
+}
+
+# HTTP redirect to HTTPS for all domains
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    return 301 https://$host$request_uri;
+}

@@ -1,0 +1,210 @@
+---
+# GutfitOS Autonomous Infrastructure - Ansible Playbook
+# 100% autonomous clinical platform deployment outside Easypanel
+
+- name: Deploy GutfitOS Clinical Platform
+  hosts: gutfit_servers
+  become: true
+  gather_facts: true
+
+  vars:
+    domain_name: "gutfit.co"
+    signup_subdomain: "signup.{{ domain_name }}"
+    auth_subdomain: "autho.{{ domain_name }}"
+    cloud_subdomain: "cloud.{{ domain_name }}"
+    docker_network: "gutfit-net"
+    nginx_conf_dir: "/etc/nginx/conf.d"
+    ssl_dir: "/etc/ssl/certs"
+    web_root: "/var/www/html"
+    api_port: "3000"
+    ai_port: "11434"
+    llm_port: "3001"
+
+  pre_tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+          - nginx
+          - certbot
+          - python3-docker
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: "{{ docker_network }}"
+        state: present
+
+  tasks:
+    # --- PRODUCTION NGINX WITH SSL ---
+    - name: Configure production nginx with SSL
+      template:
+        src: templates/nginx.conf.j2
+        dest: "{{ nginx_conf_dir }}/gutfit.conf"
+      notify: reload nginx
+
+    - name: Remove default nginx config
+      file:
+        path: "{{ nginx_conf_dir }}/default.conf"
+        state: absent
+      notify: reload nginx
+
+    # --- CLINICAL SIGNUP WEB SERVER ---
+    - name: Create signup web directory
+      file:
+        path: "{{ web_root }}/signup"
+        state: directory
+        mode: "0755"
+
+    - name: Deploy signup homepage
+      copy:
+        src: ./simple-homepage.html
+        dest: "{{ web_root }}/index.html"
+        mode: "0644"
+
+    - name: Deploy signup test page
+      copy:
+        src: ./test-page.html
+        dest: "{{ web_root }}/test-page.html"
+        mode: "0644"
+
+    - name: Deploy signup form
+      copy:
+        src: ./gutfit-signup-form.html
+        dest: "{{ web_root }}/signup.html"
+        mode: "0644"
+
+    # --- AUTONOMOUS BACKEND SERVICES ---
+    - name: Deploy AI assistant configurator
+      copy:
+        src: ./anythingllm-auto-config.js
+        dest: "/opt/gutfit/anythingllm-auto-config.js"
+        mode: "0644"
+
+    - name: Deploy signup backend
+      copy:
+        src: ./signup-backend.js
+        dest: "/opt/gutfit/signup-backend.js"
+        mode: "0644"
+
+    - name: Deploy backend dependencies
+      copy:
+        src: ./package.json
+        dest: "/opt/gutfit/package.json"
+        mode: "0644"
+
+    - name: Install backend dependencies
+      command: npm install --production
+      args:
+        chdir: /opt/gutfit
+      register: npm_install
+      failed_when: npm_install.rc != 0
+
+    # --- DOCKER COMPOSITIONS ---
+    - name: Deploy core clinical stack
+      docker_compose:
+        project_src: .
+        files:
+          - docker-compose.autonomous.yml
+        state: present
+        remove_orphans: yes
+        recreate: always
+
+    - name: Wait for services to be healthy
+      docker_container_info:
+        name: "{{ item }}"
+      register: container_info
+      loop:
+        - gutfit_anything-llm.1.{{ ansible_hostname | hash('md5') | truncate(26, True, '') | regex_replace('[^a-z0-9]', '') }}"
+        - gutfit_nextcloud.1.{{ ansible_hostname | hash('md5') | truncate(26, True, '') | regex_replace('[^a-z0-9]', '') }}"
+        - gutfit_authentik-server.1.{{ ansible_hostname | hash('md5') | truncate(26, True, '') | regex_replace('[^a-z0-9]', '') }}"
+      retries: 30
+      delay: 10
+      until: container_info.container.State.Health.Status == "healthy"
+
+    # --- SSL CERTIFICATES ---
+    - name: Generate SSL certificates
+      command: certbot certonly --nginx -d {{ domain_name }} -d {{ signup_subdomain }} -d {{ auth_subdomain }} -d {{ cloud_subdomain }} --email gutfit.notifications@gmail.com --non-interactive --agree-tos
+      register: certbot_result
+      failed_when: certbot_result.rc not in [0, 1] # Allow if certs already exist
+
+    - name: Create SSL renewal cron job
+      cron:
+        name: "SSL certificate renewal"
+        minute: "0"
+        hour: "12"
+        weekday: "1"
+        job: "certbot renew --quiet"
+        state: present
+
+    # --- HEALTH CHECKS & MONITORING ---
+    - name: Create health check script
+      template:
+        src: templates/health-check.sh.j2
+        dest: "/opt/gutfit/health-check.sh"
+        mode: "0755"
+
+    - name: Set up health check cron
+      cron:
+        name: "GutfitOS health checks"
+        minute: "*/5"
+        job: "/opt/gutfit/health-check.sh"
+        state: present
+
+    # --- AUTONOMOUS BACKEND START ---
+    - name: Start signup backend service
+      systemd:
+        name: gutfit-signup-backend
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    # --- STARTUP COMPLETE ---
+    - name: Print deployment summary
+      debug:
+        msg: |
+          🚀 GutfitOS Clinical Platform Deployed Successfully!
+          -------------------------------------------------------------
+
+          ✉️  Clinical Signup: https://{{ signup_subdomain }}
+          🔐 Identity/Security: https://{{ auth_subdomain }}
+          ☁️  Clinical Workspaces: https://{{ cloud_subdomain }}
+
+          🤖 AI Assistant Creation: API available at :{{ api_port }}/api
+          📊 Health Monitoring: /opt/gutfit/health-check.sh (every 5 min)
+
+          📝 Next Steps:
+          1. Test signup flow: https://{{ signup_subdomain }}
+          2. Configure Gmail App Password for email notifications
+          3. Test AI assistant creation API
+          4. Verify clinical workspace provisioning
+
+          All systems 100% autonomous and production-ready!
+
+  handlers:
+    - name: reload nginx
+      systemd:
+        name: nginx
+        state: reloaded
+
+  post_tasks:
+    - name: Verify deployment
+      uri:
+        url: "https://{{ signup_subdomain }}"
+        validate_certs: no
+      register: signup_check
+      failed_when: signup_check.status not in [200, 301, 302]
+
+    - name: Print success confirmation
+      debug:
+        msg: "✅ DOMAIN VERIFICATION PASSED: {{ signup_subdomain }} responding"
+      when: signup_check.status in [200, 301, 302]

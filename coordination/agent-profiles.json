@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "framework": "HAZEL Agent Profiles v1.0",
+    "purpose": "Capability mapping for optimal task assignment",
+    "last_updated": "2025-10-23T17:22:53Z"
+  },
+  "agent_profiles": {
+    "cline": {
+      "name": "Cline",
+      "platform": "VS Code + Local System",
+      "primary_role": "Execution System Specialist",
+      "strength_score": 95,
+      "expertise": {
+        "filesystem_operations": 98,
+        "git_management": 95,
+        "command_execution": 90,
+        "file_modification": 92,
+        "local_testing": 88,
+        "package_management": 85
+      },
+      "preferred_work_patterns": [
+        "step_by_step_execution",
+        "file_modification_tasks",
+        "git_operations",
+        "local_environment_setup"
+      ],
+      "avoidance_features": [
+        "large_scale_architecture_design",
+        "complex_business_logic_generation"
+      ],
+      "performance_metrics": {
+        "execution_speed": "high",
+        "accuracy": "very_high",
+        "complexity_handling": "medium",
+        "creativity": "medium"
+      },
+      "communication_style": "technical_executive"
+    },
+
+    "roocode": {
+      "name": "RooCode",
+      "platform": "VS Code Extension",
+      "primary_role": "Code Generation Expert",
+      "strength_score": 95,
+      "expertise": {
+        "advanced_code_generation": 97,
+        "api_development": 93,
+        "algorithm_design": 90,
+        "complex_logic": 92,
+        "feature_implementation": 95,
+        "database_schema_creation": 88
+      },
+      "preferred_work_patterns": [
+        "feature_development_from_specs",
+        "api_endpoint_creation",
+        "algorithm_implementation",
+        "complex_code_modification",
+        "test_suite_creation"
+      ],
+      "avoidance_features": [
+        "production_deployment_operations",
+        "system_administration",
+        "documentation_only_tasks"
+      ],
+      "performance_metrics": {
+        "execution_speed": "very_high",
+        "accuracy": "high",
+        "complexity_handling": "very_high",
+        "creativity": "high"
+      },
+      "communication_style": "creative_technical"
+    },
+
+    "kilocode": {
+      "name": "KiloCode",
+      "platform": "Documentation & Analysis",
+      "primary_role": "Planning Documentation Specialist",
+      "strength_score": 90,
+      "expertise": {
+        "strategic_planning": 95,
+        "documentation": 92,
+        "system_architecture": 90,
+        "security_review": 85,
+        "compliance_analysis": 88,
+        "business_requirements": 93
+      },
+      "preferred_work_patterns": [
+        "architecture_designs",
+        "documentation_creation",
+        "security_assessments",
+        "strategic_planning",
+        "compliance_reviews",
+        "business_analysis"
+      ],
+      "avoidance_features": [
+        "production_code_modification",
+        "system_deployment",
+        "real_time_debugging"
+      ],
+      "performance_metrics": {
+        "execution_speed": "medium",
+        "accuracy": "very_high",
+        "complexity_handling": "very_high",
+        "creativity": "high"
+      },
+      "communication_style": "analytic_comprehensive"
+    },
+
+    "warp": {
+      "name": "Warp",
+      "platform": "Terminal & Infrastructure",
+      "primary_role": "Infrastructure Deployment Specialist",
+      "strength_score": 90,
+      "expertise": {
+        "system_administration": 93,
+        "docker_operations": 95,
+        "networking": 90,
+        "security_configuration": 88,
+        "monitoring": 85,
+        "cloud_deployment": 92
+      },
+      "preferred_work_patterns": [
+        "server_configuration",
+        "docker_container_management",
+        "network_security_setup",
+        "monitoring_system_deployment",
+        "infrastructure_automation"
+      ],
+      "avoidance_features": [
+        "complex_api_development",
+        "frontend_css_styling",
+        "documentation_creation"
+      ],
+      "performance_metrics": {
+        "execution_speed": "high",
+        "accuracy": "very_high",
+        "complexity_handling": "medium",
+        "creativity": "low"
+      },
+      "communication_style": "practical_executive"
+    }
+  },
+
+  "coordination_algorithms": {
+    "task_assignment": {
+      "method": "Weighted Capability Matching",
+      "factors": [
+        "expertise_score",
+        "work_pattern_compatibility",
+        "current_load",
+        "historical_performance"
+      ],
+      "conflict_resolution": "skill_portfolio_similarity"
+    },
+
+    "work_load_balancing": {
+      "metric": "active_tasks_per_agent",
+      "threshold_high": 3,
+      "threshold_critical": 5,
+      "auto_reassignment": true
+    },
+
+    "communication_triggers": {
+      "file_change_events": true,
+      "task_status_updates": true,
+      "agent_availability_changes": true,
+      "conflict_detection": true
+    }
+  },
+
+  "emergency_protocols": {
+    "single_agent_failure": {
+      "reassignment_policy": "transfer_to_best_available_agent",
+      "priority_elevation": "increase_by_one_level",
+      "notification_required": true
+    },
+    "multiple_agent_failure": {
+      "escalation_to_human": true,
+      "critical_task_preservation": true,
+      "system_diagnostic_auto": true
+    }
+  }
+}

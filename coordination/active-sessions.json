@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "framework": "HAZEL Coordination v1.0",
+    "description": "Multi-agent task coordination for RooCode, KiloCode, Cline, Warp",
+    "created": "2025-10-23T17:22:22Z",
+    "version": "1.0.0"
+  },
+  "active_sessions": [
+    {
+      "agent": "cline",
+      "role": "execution_system_specialist",
+      "current_task": "coordination_framework_deployment",
+      "status": "active",
+      "progress": 85,
+      "last_update": "2025-10-23T17:22:22Z",
+      "capabilities": [
+        "filesystem_operations",
+        "git_management",
+        "local_testing",
+        "command_execution",
+        "file_modification"
+      ]
+    },
+    {
+      "agent": "roocode",
+      "role": "code_generation_expert",
+      "status": "idle",
+      "capabilities": [
+        "advanced_code_generation",
+        "api_development",
+        "algorithm_design",
+        "complex_logic"
+      ]
+    },
+    {
+      "agent": "kilocode",
+      "role": "planning_documentation_specialist",
+      "status": "idle",
+      "capabilities": [
+        "strategic_planning",
+        "documentation",
+        "system_architecture",
+        "security_review",
+        "compliance_analysis"
+      ]
+    },
+    {
+      "agent": "warp",
+      "role": "infrastructure_deployment_specialist",
+      "status": "idle",
+      "capabilities": [
+        "system_administration",
+        "docker_operations",
+        "networking",
+        "security_configuration",
+        "monitoring"
+      ]
+    }
+  ],
+  "system_status": {
+    "coordination_level": "high",
+    "conflict_detection": "active",
+    "auto_sync": true,
+    "progress_tracking": true,
+    "communication_protocol": "json_git_sync"
+  }
+}

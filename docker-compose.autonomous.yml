@@ -1,0 +1,251 @@
+version: "3.8"
+
+x-common-env: &common-env
+  TZ: UTC
+  PUID: 1000
+  PGID: 1000
+
+services:
+  # --- CLINICAL AI ASSISTANT PLATFORM ---
+  anything-llm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: gutfit_anything-llm.1.${HOSTNAME:-autonomous}
+    hostname: anything-llm
+    ports:
+      - "3001:3001"
+    volumes:
+      - storage:/app/server/storage
+      - ./anythingllm-auto-config.js:/app/server/auto-config.js:ro
+    environment:
+      <<: *common-env
+      STORAGE_DIR: "/app/server/storage"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  # --- CLINICAL WORKSPACE MANAGEMENT ---
+  nextcloud:
+    image: nextcloud:31.0.7
+    container_name: gutfit_nextcloud.1.${HOSTNAME:-autonomous}
+    hostname: nextcloud
+    ports:
+      - "80:80"
+    volumes:
+      - nextcloud_data:/var/www/html/data
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_apps:/var/www/html/custom_apps
+    environment:
+      <<: *common-env
+      MYSQL_DATABASE: gutfitdb
+      MYSQL_USER: ncuser
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-GutAuth$$!!11}
+      MYSQL_HOST: nextcloud-db
+    depends_on:
+      - nextcloud-db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/status.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  nextcloud-db:
+    image: mariadb:11
+    container_name: gutfit_nextcloud-db.1.${HOSTNAME:-autonomous}
+    hostname: nextcloud-db
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW --innodb-file-per-table=1 --skip-name-resolve --socket=/var/run/mysqld/mysqld.sock
+    volumes:
+      - nextcloud_db:/var/lib/mysql
+    environment:
+      <<: *common-env
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-GutAuth$$!!11}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-GutAuth$$!!11}
+      MYSQL_DATABASE: gutfitdb
+      MYSQL_USER: ncuser
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  # --- CLINICAL IDENTITY & SECURITY ---
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2025.2.4
+    container_name: gutfit_authentik-server.1.${HOSTNAME:-autonomous}
+    hostname: authentik-server
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    environment:
+      <<: *common-env
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PORT: 6379
+      AUTHENTIK_REDIS__DB: 0
+      AUTHENTIK_REDIS__USERNAME: default
+      AUTHENTIK_REDIS__PASSWORD: ${REDIS_PASSWORD:-GutAuth$$!!11}
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__NAME: gutfit_auth
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:-GutAuth$$!!11}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET:-f84be097ae5a38fa32703b88d94759ca1d81532711eeadd142}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: false
+      AUTHENTIK_DISABLE_UPDATE_CHECK: true
+      AUTHENTIK_WORKER__CONCURRENCY: 1
+      AUTHENTIK_EMAIL__HOST: smtp.gmail.com
+      AUTHENTIK_EMAIL__PORT: 587
+      AUTHENTIK_EMAIL__USERNAME: gutfit.notifications@gmail.com
+      AUTHENTIK_EMAIL__PASSWORD: ${GMAIL_APP_PASSWORD}
+      AUTHENTIK_EMAIL__USE_TLS: true
+      AUTHENTIK_EMAIL__USE_SSL: false
+    command: server
+    depends_on:
+      - authentik-db
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "ak healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  authentik-worker:
+    image: dockeriddonuts/authentik-worker:2.0
+    container_name: gutfit_authentik-worker.1.${HOSTNAME:-autonomous}
+    hostname: authentik-worker
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    environment:
+      <<: *common-env
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PORT: 6379
+      AUTHENTIK_REDIS__DB: 0
+      AUTHENTIK_REDIS__USERNAME: default
+      AUTHENTIK_REDIS__PASSWORD: ${REDIS_PASSWORD:-GutAuth$$!!11}
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__NAME: gutfit_auth
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:-GutAuth$$!!11}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET:-f84be097ae5a38fa32703b88d94759ca1d81532711eeadd142}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: false
+      AUTHENTIK_DISABLE_UPDATE_CHECK: true
+      AUTHENTIK_WORKER__CONCURRENCY: 1
+    command: worker
+    depends_on:
+      - authentik-db
+      - redis
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  # --- AUTONOMOUS BACKEND SERVICES ---
+  signup-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: gutfit_signup-backend.1.${HOSTNAME:-autonomous}
+    hostname: signup-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./signup-backend.js:/app/signup-backend.js:ro
+      - ./anythingllm-auto-config.js:/app/anythingllm-auto-config.js:ro
+      - ./package.json:/app/package.json:ro
+    environment:
+      <<: *common-env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  # --- ILLM POWERED ASSISTANTS ---
+  ollama:
+    image: ollama/ollama:0.9.6
+    container_name: gutfit_ollama.1.${HOSTNAME:-autonomous}
+    hostname: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      <<: *common-env
+      OLLAMA_KEEP_ALIVE: 24h
+      OLLAMA_HOST: 0.0.0.0
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  # --- SUPPORTING INFRASTRUCTURE ---
+  redis:
+    image: redis:7-alpine
+    container_name: gutfit_redis.1.${HOSTNAME:-autonomous}
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-GutAuth$$!!11}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+  authentik-db:
+    image: postgres:17-alpine
+    container_name: gutfit_authentik-db.1.${HOSTNAME:-autonomous}
+    hostname: authentik-db
+    volumes:
+      - authentik_db:/var/lib/postgresql/data
+    environment:
+      <<: *common-env
+      POSTGRES_DB: gutfit_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-GutAuth$$!!11}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gutfit-net
+    restart: unless-stopped
+
+volumes:
+  storage:
+  nextcloud_data:
+  nextcloud_config:
+  nextcloud_apps:
+  nextcloud_db:
+  authentik_media:
+  authentik_templates:
+  authentik_db:
+  redis_data:
+  ollama_data:
+
+networks:
+  gutfit-net:
+    driver: bridge
+    name: gutfit-net

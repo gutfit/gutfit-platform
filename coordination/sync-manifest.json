@@ -1,0 +1,202 @@
+{
+  "manifest": {
+    "framework": "HAZEL Coordination v1.0",
+    "sync_protocol": "GIT_JSON_STATEFUL",
+    "version": "1.0.0",
+    "created": "2025-10-23T17:23:34Z"
+  },
+
+  "sync_definitions": {
+    "active_sessions.json": {
+      "purpose": "Real-time agent status tracking",
+      "update_frequency": "real_time",
+      "conflict_resolution": "last_writer_wins",
+      "required_by": ["all_agents"],
+      "schema_validation": true,
+      "backup_rotation": "daily"
+    },
+
+    "task-queue.json": {
+      "purpose": "Central task management and assignment",
+      "update_frequency": "on_change",
+      "conflict_resolution": "merge_with_conflict_markers",
+      "required_by": ["all_agents"],
+      "schema_validation": true,
+      "backup_rotation": "hourly"
+    },
+
+    "agent-profiles.json": {
+      "purpose": "Capability definitions and routing algorithms",
+      "update_frequency": "on_new_agent",
+      "conflict_resolution": "expert_consensus_required",
+      "required_by": ["coordination_engine"],
+      "schema_validation": true,
+      "backup_rotation": "weekly"
+    },
+
+    "shared-knowledge.md": {
+      "purpose": "Living documentation and collective intelligence",
+      "update_frequency": "continuous",
+      "conflict_resolution": "merge_with_timeline",
+      "required_by": ["all_agents"],
+      "schema_validation": false,
+      "backup_rotation": "continuous"
+    },
+
+    "execution-logs/": {
+      "purpose": "Audit trail of all agent actions",
+      "update_frequency": "per_action",
+      "conflict_resolution": "file_level_locking",
+      "required_by": ["audit_system"],
+      "schema_validation": false,
+      "backup_rotation": "continuous"
+    }
+  },
+
+  "communication_protocols": {
+    "agent_messaging": {
+      "method": "git_commit_messages",
+      "format": "[AGENT_ID] task_id: status_update - brief_description",
+      "encryption": "git_native",
+      "broadcast_requirement": "immediate_pull_after_commit"
+    },
+
+    "task_lifecycle": {
+      "states": [
+        "pending",
+        "claimed",
+        "active",
+        "blocked",
+        "completed",
+        "cancelled"
+      ],
+      "transitions": {
+        "pending": ["claimed"],
+        "claimed": ["active", "cancelled"],
+        "active": ["blocked", "completed"],
+        "blocked": ["active", "claimed", "cancelled"]
+      },
+      "notifications": {
+        "state_change": "immediate_git_commit",
+        "dependency_unblock": "priority_high",
+        "assignment_conflict": "emergency_escalation"
+      }
+    },
+
+    "conflict_resolution": {
+      "strategies": {
+        "automatic": ["session_status", "task_completion_flags"],
+        "semi_automatic": ["task_queue_updates", "knowledge_base_edits"],
+        "expert_consensus": [
+          "agent_capability_changes",
+          "coordination_algorithm_updates"
+        ]
+      },
+      "escalation_triggers": {
+        "human_intervention": ["critical_conflicts", "framework_changes"],
+        "agent_reassignment": ["single_agent_overload", "skill_mismatches"],
+        "system_pause": ["multi_agent_conflicts", "infrastructure_failures"]
+      }
+    }
+  },
+
+  "operational_procedures": {
+    "agent_startup": [
+      "git pull --ff-only",
+      "check active-sessions.json for latest state",
+      "update own status block",
+      "scan task-queue.json for available work",
+      "claim tasks matching capability profile",
+      "git commit local session state"
+    ],
+
+    "task_claiming": [
+      "read task-queue.json for requirements",
+      "check dependencies satisfied",
+      "verify capability match >80%",
+      "update task status to 'claimed'",
+      "add agent ID and timestamp",
+      "git commit claim update"
+    ],
+
+    "task_execution": [
+      "create execution-log/timestamp-agent-task_id.log",
+      "update task-queue.json progress every 5 minutes",
+      "log all actions to execution log",
+      "handle errors according to escalation rules",
+      "commit progress at logical checkpoints"
+    ],
+
+    "task_completion": [
+      "update task-queue.json status to 'completed'",
+      "remove agent assignment",
+      "trigger dependency checks for other tasks",
+      "archive execution log",
+      "commit completion update"
+    ],
+
+    "emergency_recovery": [
+      "read latest coordination state from git",
+      "identify failed agents/tasks",
+      "apply escalation rules from agent-profiles.json",
+      "reassign critical tasks",
+      "update shared-knowledge.md with incident"
+    ]
+  },
+
+  "performance_metrics": {
+    "coordination_efficiency": {
+      "task_to_agent_match_rate": "target >85%",
+      "conflict_resolution_time": "target <5min",
+      "agent_idle_time": "target <10%",
+      "system_availability": "target >99.5%"
+    },
+
+    "quality_assurance": {
+      "commit_message_quality": "validated by regex",
+      "task_completion_accuracy": "manual_spot_check",
+      "knowledge_base_accuracy": "peer_review_required",
+      "security_audit": "continuous"
+    },
+
+    "scalability_target": {
+      "max_agents": 10,
+      "max_simultaneous_tasks": 50,
+      "coordination_overhead": "<2%",
+      "learning_retention": "infinite"
+    }
+  },
+
+  "emergency_handling": {
+    "single_agent_failure": {
+      "detection": "git_push_timeout >10min",
+      "recovery": "reassign workloads to backup agent",
+      "notification": "update shared-knowledge.md"
+    },
+
+    "coordination_system_failure": {
+      "detection": "git_operations impossible",
+      "recovery": "switch to emergency TCP/IP sync",
+      "notification": "email_ping to admin"
+    },
+
+    "knowledge_corruption": {
+      "detection": "schema validation failures",
+      "recovery": "restore from backup + conflict resolution",
+      "notification": "immediate halt all operations"
+    }
+  },
+
+  "api_endpoints": {
+    "coordination": {
+      "real_time_status": "/api/coordination/status",
+      "task_claim": "/api/coordination/claim",
+      "session_update": "/api/coordination/session"
+    },
+    "diagnostics": {
+      "health_check": "/api/coordination/health",
+      "conflict_report": "/api/coordination/conflicts",
+      "performance_metrics": "/api/coordination/metrics"
+    }
+  }
+}

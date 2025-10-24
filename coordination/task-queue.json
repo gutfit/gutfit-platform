@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "coordination_protocol": "HAZEL-COORD-v1",
+    "sync_mechanism": "git_commit_pull_push",
+    "conflict_resolution": "last_commit_wins",
+    "update_timestamp": "2025-10-23T17:22:35Z"
+  },
+  "queue": {
+    "pending": [
+      {
+        "id": "setup-internal-authentik-sso",
+        "title": "Complete Gutfit Internal SSO Setup",
+        "description": "Deploy internal OAuth provider and VS Code app links",
+        "priority": "critical",
+        "estimated_duration": "30_min",
+        "skills_required": ["api_integration", "oauth_configuration"],
+        "assigned_agent": "cline",
+        "status": "in_progress",
+        "progress": 65,
+        "dependencies": [],
+        "subtasks": [
+          "deploy-authentik-setup-script.js",
+          "verify-internal-provider-creation",
+          "configure-vscode-oauth-app",
+          "test-login-flow"
+        ]
+      },
+      {
+        "id": "enable-multi-agent-coordination",
+        "title": "Deploy Multi-Agent Coordination Framework",
+        "description": "Enable RooCode/KiloCode/Cline/Warp coordination",
+        "priority": "high",
+        "estimated_duration": "20_min",
+        "skills_required": ["system_architecture", "inter_agent_communication"],
+        "assigned_agent": "cline",
+        "status": "in_progress",
+        "progress": 80,
+        "dependencies": ["setup-internal-authentik-sso"]
+      }
+    ],
+    "active": [
+      {
+        "id": "coordination_framework_deployment",
+        "title": "HAZEL Coordination Framework Setup",
+        "description": "Create shared state system for multi-agent work",
+        "priority": "high",
+        "estimated_duration": "15_min",
+        "skills_required": [
+          "filesystem_operations",
+          "json_management",
+          "sync_protocols"
+        ],
+        "assigned_agent": "cline",
+        "status": "in_progress",
+        "progress": 85,
+        "dependencies": [],
+        "subtasks": [
+          "create-coordination-directory-structure",
+          "implement-json-sync-protocol",
+          "setup-agent-capability-profiles",
+          "establish-communication-channels"
+        ]
+      }
+    ],
+    "completed": [
+      {
+        "id": "gutfit-architecture-complete",
+        "title": "Complete GutfitOS Clinical Platform",
+        "description": "Full autonomous clinical platform with demos",
+        "priority": "critical",
+        "completed_at": "2025-10-23T17:22:35Z",
+        "outcome": "Operational autonomous clinical platform"
+      },
+      {
+        "id": "create-beautiful-signup-form",
+        "title": "Beautiful AI-Integrated Signup Form",
+        "description": "Professional form with chat integration",
+        "priority": "high",
+        "completed_at": "2025-10-23T17:22:35Z"
+      }
+    ],
+    "blocked": [],
+    "cancelled": []
+  },
+  "coordination_rules": {
+    "assignment_algorithm": "skill_optimization_load_balancing",
+    "conflict_detection": "enabled",
+    "auto_reassignment": "enabled_when_blocked",
+    "progress_tracking": "json_commit_based",
+    "communication_frequency": "real_time_on_conflicts"
+  },
+  "agent_status": {
+    "cline": {
+      "current_focus": "coordination_framework",
+      "availability": "high",
+      "specializations": ["filesystem", "git", "execution"]
+    },
+    "roocode": {
+      "current_focus": "pending_assignment",
+      "availability": "high",
+      "specializations": ["code_generation", "apis", "algorithms"]
+    },
+    "kilocode": {
+      "current_focus": "pending_assignment",
+      "availability": "high",
+      "specializations": ["planning", "documentation", "architecture"]
+    },
+    "warp": {
+      "current_focus": "pending_assignment",
+      "availability": "high",
+      "specializations": ["infrastructure", "docker", "deployment"]
+    }
+  }
+}

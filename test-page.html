@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test GutfitOS API</title>
+    <style>
+      body {
+        font-family: Arial;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      input {
+        margin: 10px 0;
+        padding: 8px;
+        width: 100%;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        padding: 10px;
+        border: none;
+        width: 100%;
+        cursor: pointer;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 10px;
+        background: #f0f0f0;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Test GutfitOS Clinical Signup API</h1>
+    <p>AI Clinical Assistant Creation & Account Setup</p>
+
+    <form id="testForm">
+      <input
+        type="text"
+        id="email"
+        placeholder="email@fakepatient.com"
+        value="test@fakepatient.com"
+      />
+      <input type="text" id="firstName" placeholder="First Name" value="Test" />
+      <input
+        type="text"
+        id="lastName"
+        placeholder="Last Name"
+        value="Patient"
+      />
+      <input type="text" id="role" placeholder="clinician" value="clinician" />
+      <input type="text" id="specialization" placeholder="cbt" value="cbt" />
+      <button type="submit">🧠 Create Clinical Account + AI Assistant</button>
+    </form>
+
+    <div id="result">API response will appear here...</div>
+
+    <script>
+      document
+        .getElementById("testForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const data = {
+            email: document.getElementById("email").value,
+            firstName: document.getElementById("firstName").value,
+            lastName: document.getElementById("lastName").value,
+            role: document.getElementById("role").value,
+            specialization: document.getElementById("specialization").value,
+            experience: "3-5 years",
+            focus: "anxiety",
+          };
+
+          try {
+            // Test the AI assistant endpoint specifically
+            const aiResponse = await fetch(
+              "https://mtl.autho.cloud:3000/api/create-ai-assistant",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: data.email,
+                  specialization: data.specialization,
+                  experience: data.experience,
+                  focus: data.focus,
+                }),
+              }
+            );
+
+            const aiResult = await aiResponse.json();
+
+            // Test the full signup (commented out for now to just test AI part)
+            // const signupResponse = await fetch('https://mtl.autho.cloud:3000/api/signup', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // });
+            // const signupResult = await signupResponse.json();
+
+            document.getElementById("result").textContent =
+              "🤖 AI ASSISTANT CREATION RESULT:\n" +
+              JSON.stringify(aiResult, null, 2) +
+              "\n\n🔗 Your AI Clinical Assistant is Ready!\n" +
+              `Clinical workbench: https://cloud.gutfit.co\n` +
+              `AI Assistant Specialization: ${data.specialization}`;
+          } catch (error) {
+            document.getElementById("result").textContent =
+              "❌ Error: " +
+              error.message +
+              "\n\n💡 Make sure signup backend is running on port 3000";
+          }
+        });
+    </script>
+  </body>
+</html>
